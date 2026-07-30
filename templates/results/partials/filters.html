@@ -1,0 +1,59 @@
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-bold">Filters</div>
+    <div class="card-body">
+        <form method="get" action="{% url 'influencers:results_list' %}">
+            <!-- Preserve sort if needed, though form resets it to default usually, which is fine -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Search</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Name, handle, keywords..." value="{{ form.search.value|default:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Platform</label>
+                <select name="platform" class="form-select form-select-sm">
+                    <option value="">All Platforms</option>
+                    {% for val, label in form.platform.field.choices %}
+                        {% if val %}<option value="{{ val }}" {% if form.platform.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Recommendation</label>
+                <select name="recommendation" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    {% for val, label in form.recommendation.field.choices %}
+                        {% if val %}<option value="{{ val }}" {% if form.recommendation.value == val %}selected{% endif %}>{{ label }}</option>{% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label small fw-bold">Min Score</label>
+                    <input type="number" name="min_score" class="form-control form-control-sm" min="0" max="100" value="{{ form.min_score.value|default:'' }}">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small fw-bold">Max Score</label>
+                    <input type="number" name="max_score" class="form-control form-control-sm" min="0" max="100" value="{{ form.max_score.value|default:'' }}">
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label small fw-bold">Min Followers</label>
+                    <input type="number" name="min_followers" class="form-control form-control-sm" value="{{ form.min_followers.value|default:'' }}">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small fw-bold">Max Followers</label>
+                    <input type="number" name="max_followers" class="form-control form-control-sm" value="{{ form.max_followers.value|default:'' }}">
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+                <a href="{% url 'influencers:results_list' %}" class="btn btn-outline-secondary btn-sm">Clear All</a>
+            </div>
+        </form>
+    </div>
+</div>

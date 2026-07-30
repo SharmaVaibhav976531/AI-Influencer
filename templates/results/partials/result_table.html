@@ -1,0 +1,30 @@
+<div class="card border-0 shadow-sm h-100">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <h5 class="fw-bold mb-0">{{ classification.influencer.name }}</h5>
+                <small class="text-muted">@{{ classification.influencer.handle }}</small>
+            </div>
+            <span class="badge bg-light text-dark border">{{ classification.influencer.get_platform_display }}</span>
+        </div>
+        
+        <p class="small text-muted mb-3">{{ classification.influencer.bio|truncatewords:15|default:"No bio available." }}</p>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <small class="text-muted d-block">Followers</small>
+                <span class="fw-bold">{{ classification.influencer.followers|floatformat:0 }}</span>
+            </div>
+            <div class="text-end">
+                <small class="text-muted d-block">Match Score</small>
+                <span class="fw-bold text-primary">{{ classification.overall_score }}%</span>
+            </div>
+        </div>
+        
+        <div class="d-grid">
+            <a href="{% url 'influencers:influencer_detail' classification.influencer.id %}" class="btn btn-outline-primary btn-sm">
+                View Full Details
+            </a>
+        </div>
+    </div>
+</div>

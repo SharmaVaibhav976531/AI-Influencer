@@ -1,5 +1,5 @@
 import logging
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Avg
@@ -8,6 +8,9 @@ from apps.influencers.models import Influencer
 from apps.influencers.services import openrouter_service
 from apps.classification.models import Classification, SearchCriteria
 from .services import batch_process_nlp, openrouter_service
+from .services.result_service import get_filtered_classifications
+from .forms import ResultFilterForm
+from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +109,47 @@ def ai_classification_view(request):
         'pending_count': pending_count,
     }
     return render(request, 'influencers/ai_classification.html', context)
+
+
+@login_required
+def results_list_view(request):
+    form = ResultFilterForm(request.GET)
+    
+    if form.is_valid():
+        queryset = get_filtered_classifications(request.user, request.GET)
+    else:
+        queryset = get_filtered_classifications(request.user, {})
+        
+    paginator = Paginator(queryset, 25) # 25 results per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'form': form,
+    }
+    return render(request, 'results/list.html', context)
+
+
+@login_required
+def influencer_detail_view(request, pk):
+    # Optimize query: get influencer, its upload, and prefetch its classifications
+    influencer = get_object_or_404(
+        Influencer.objects.select_related('upload').prefetch_related('classifications'),
+        pk=pk,
+        upload__user=request.user
+    )
+    
+    # Get the latest completed classification for this influencer
+    classification = influencer.classifications.filter(status='COMPLETED').first()
+    
+    if not classification:
+        messages.warning(request, "No completed AI classification found for this influencer.")
+        return redirect('influencers:results_list')
+        
+    context = {
+        'influencer': influencer,
+        'classification': classification,
+    }
+    return render(request, 'results/detail.html', context)
+

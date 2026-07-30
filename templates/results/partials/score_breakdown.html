@@ -1,0 +1,81 @@
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">AI Score Breakdown</div>
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- Left Column: Progress Bars -->
+            <div class="col-md-6">
+                <!-- Overall Match Score -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small fw-bold">Overall Match Score</span>
+                        <span class="small fw-bold text-primary">{{ classification.overall_score|default:0 }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ classification.overall_score|default:0 }}%;" 
+                             aria-valuenow="{{ classification.overall_score|default:0 }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- AI Confidence -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small fw-bold">AI Confidence</span>
+                        <span class="small fw-bold text-info">{{ classification.confidence_score|default:0 }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-info" role="progressbar" 
+                             style="width: {{ classification.confidence_score|default:0 }}%;" 
+                             aria-valuenow="{{ classification.confidence_score|default:0 }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- Rule-Based NLP Score -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small fw-bold">Rule-Based NLP Score</span>
+                        <span class="small fw-bold text-success">{{ influencer.rule_based_score|default:0 }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ influencer.rule_based_score|default:0 }}%;" 
+                             aria-valuenow="{{ influencer.rule_based_score|default:0 }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Match Indicators -->
+            <div class="col-md-6">
+                <h6 class="small fw-bold text-uppercase text-muted mb-2">Match Indicators</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if classification.language_match %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                            <i class="bi bi-check-circle me-1"></i> Language Match
+                        </span>
+                    {% endif %}
+                    
+                    {% if classification.orientation_match %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                            <i class="bi bi-check-circle me-1"></i> Orientation Match
+                        </span>
+                    {% endif %}
+                    
+                    {% if classification.niche_match %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                            <i class="bi bi-check-circle me-1"></i> Niche Match
+                        </span>
+                    {% endif %}
+                    
+                    {% if classification.keyword_match %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                            <i class="bi bi-check-circle me-1"></i> Keyword Match
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

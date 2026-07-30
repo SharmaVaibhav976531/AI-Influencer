@@ -1,0 +1,82 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ influencer.name }} | Influencer Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Influencer Details</h2>
+    <a href="{% url 'influencers:results_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i> Back to Results
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Profile & Raw Data -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body text-center">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-fill fs-1 text-secondary"></i>
+                </div>
+                <h4 class="fw-bold mb-1">{{ influencer.name }}</h4>
+                <p class="text-muted mb-2">@{{ influencer.handle }}</p>
+                <span class="badge bg-primary mb-3">{{ influencer.get_platform_display }}</span>
+                
+                <div class="text-start mt-4">
+                    <p class="mb-1"><strong>Followers:</strong> {{ influencer.followers|floatformat:0 }}</p>
+                    <p class="mb-1"><strong>Language:</strong> {{ influencer.language_detected|default:"Unknown" }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ influencer.location|default:"N/A" }}</p>
+                    {% if influencer.website %}
+                        <p class="mb-1"><strong>Website:</strong> <a href="{{ influencer.website }}" target="_blank" class="text-decoration-none">{{ influencer.website }}</a></p>
+                    {% endif %}
+               6</div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-bold">Source Information</div>
+            <div class="card-body">
+                <p class="mb-1 small"><strong>Upload File:</strong> {{ influencer.upload.original_filename }}</p>
+                <p class="mb-1 small"><strong>Uploaded:</strong> {{ influencer.upload.created_at|date:"M d, Y" }}</p>
+                <p class="mb-0 small"><strong>Processed:</strong> {{ classification.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: AI & NLP Analysis -->
+    <div class="col-lg-8">
+        <!-- Score Breakdown -->
+        {% include 'results/partials/score_breakdown.html' %}
+
+        <!-- Reasoning & Keywords -->
+        {% include 'results/partials/reasoning_card.html' %}
+
+        <!-- Bio & Description -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">Original Content</div>
+            <div class="card-body">
+                {% if influencer.bio %}
+                    <h6 class="fw-bold small text-uppercase text-muted">Bio</h6>
+                    <p class="mb-3">{{ influencer.bio }}</p>
+                {% endif %}
+                {% if influencer.description %}
+                    <h6 class="fw-bold small text-uppercase text-muted">Description</h6>
+                    <p class="mb-0">{{ influencer.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Raw AI Response (Collapsible) -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#rawAiCollapse" style="cursor: pointer;">
+                <span class="fw-bold">Raw AI Response (JSON)</span>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <div id="rawAiCollapse" class="collapse">
+                <div class="card-body bg-light">
+                    <pre class="mb-0 small text-wrap">{{ classification.ai_response|pprint }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

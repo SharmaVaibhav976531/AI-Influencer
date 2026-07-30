@@ -1,0 +1,88 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Results | Influencer Discovery Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Influencer Results</h2>
+    <button class="btn btn-secondary" disabled title="Coming in Phase 10">
+        <i class="bi bi-download me-2"></i> Export Results
+    </button>
+</div>
+
+<div class="row g-4">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3">
+        {% include 'results/partials/filters.html' %}
+    </div>
+
+    <!-- Results Area -->
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted small">{{ page_obj.paginator.count }} results found</span>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="viewToggle" id="viewTable" autocomplete="off" checked>
+                    <label class="btn btn-outline-secondary btn-sm" for="viewTable"><i class="bi bi-table"></i> Table</label>
+                    
+                    <input type="radio" class="btn-check" name="viewToggle" id="viewCard" autocomplete="off">
+                    <label class="btn btn-outline-secondary btn-sm" for="viewCard"><i class="bi bi-grid"></i> Cards</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table View -->
+        <div id="tableView" class="view-section">
+            {% include 'results/partials/result_table.html' %}
+        </div>
+
+        <!-- Card View (Hidden by default, toggled via JS) -->
+        <div id="cardView" class="view-section d-none">
+            <div class="row g-3">
+                {% for classification in page_obj %}
+                    <div class="col-md-6">
+                        {% include 'results/partials/result_card.html' %}
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm text-center p-5">
+                            <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                            <h5>No influencers match your criteria.</h5>
+                            <a href="{% url 'influencers:results_list' %}" class="btn btn-sm btn-outline-primary mt-2">Clear Filters</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            {% include 'results/partials/pagination.html' %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const viewTable = document.getElementById('viewTable');
+    const viewCard = document.getElementById('viewCard');
+    const tableView = document.getElementById('tableView');
+    const cardView = document.getElementById('cardView');
+
+    function updateView() {
+        if (viewCard.checked) {
+            tableView.classList.add('d-none');
+            cardView.classList.remove('d-none');
+        } else {
+            tableView.classList.remove('d-none');
+            cardView.classList.add('d-none');
+        }
+    }
+
+    viewTable.addEventListener('change', updateView);
+    viewCard.addEventListener('change', updateView);
+});
+</script>
+{% endblock %}

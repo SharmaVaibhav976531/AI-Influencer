@@ -43,5 +43,10 @@
                 <i class="bi bi-gear me-2"></i> Settings
             </a>
         </li>
+        <li>
+            <a href="{% url 'influencers:results_list' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if 'results' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-list-check me-2"></i> Results
+            </a>
+        </li>
     </ul>
 </nav>
