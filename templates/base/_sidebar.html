@@ -1,56 +1,57 @@
 <nav id="sidebar" class="bg-dark text-white">
     <div class="sidebar-header p-3 text-center border-bottom border-secondary">
-        <h5 class="mb-0 fw-bold">Menu</h5>
+        <h5 class="mb-0 fw-bold text-white">Navigation Menu</h5>
     </div>
     <ul class="list-unstyled components p-3 mb-0">
-        <li class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-            <a href="{% url 'dashboard:home' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        <li class="mb-1 {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <a href="{% url 'dashboard:home' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class="bi bi-speedometer2 me-2 fs-5"></i> Dashboard
             </a>
         </li>
-        <li>
-            <a href="{% url 'uploads:upload' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
-                <i class="bi bi-cloud-upload me-2"></i> Upload Files
+        <li class="mb-1 {% if request.resolver_match.namespace == 'uploads' and request.resolver_match.url_name == 'upload' %}active{% endif %}">
+            <a href="{% url 'uploads:upload' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'uploads' and request.resolver_match.url_name == 'upload' %}active{% endif %}">
+                <i class="bi bi-cloud-upload me-2 fs-5"></i> Upload Files
             </a>
         </li>
-        <li>
-            <a href="{% url 'uploads:history' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
-                <i class="bi bi-clock-history me-2"></i> Upload History
+        <li class="mb-1 {% if request.resolver_match.namespace == 'uploads' and request.resolver_match.url_name == 'history' %}active{% endif %}">
+            <a href="{% url 'uploads:history' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'uploads' and request.resolver_match.url_name == 'history' %}active{% endif %}">
+                <i class="bi bi-clock-history me-2 fs-5"></i> Upload History
             </a>
         </li>
-        <li>
-            <a href="#" class="text-white text-decoration-none py-2 px-3 d-block rounded">
-                <i class="bi bi-people me-2"></i> Influencers
+        <li class="mb-1 {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name == 'discovery' %}active{% endif %}">
+            <a href="{% url 'influencers:discovery' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name == 'discovery' %}active{% endif %}">
+                <i class="bi bi-search me-2 fs-5"></i> Influencer Discovery
             </a>
         </li>
-        <li>
-            <a href="#" class="text-white text-decoration-none py-2 px-3 d-block rounded">
-                <i class="bi bi-diagram-3 me-2"></i> Classification
+        <li class="mb-1 {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name == 'nlp_dashboard' %}active{% endif %}">
+            <a href="{% url 'influencers:nlp_dashboard' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name == 'nlp_dashboard' %}active{% endif %}">
+                <i class="bi bi-cpu me-2 fs-5"></i> NLP Engine
             </a>
         </li>
-        <li>
-            <a href="#" class="text-white text-decoration-none py-2 px-3 d-block rounded">
-                <i class="bi bi-bar-chart me-2"></i> Analytics
+        <li class="mb-1 {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name in 'ai_classification,ai_classification_stream' %}active{% endif %}">
+            <a href="{% url 'influencers:ai_classification' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name in 'ai_classification,ai_classification_stream' %}active{% endif %}">
+                <i class="bi bi-diagram-3 me-2 fs-5"></i> AI Classification
             </a>
         </li>
-        <li>
-            <a href="#" class="text-white text-decoration-none py-2 px-3 d-block rounded">
-                <i class="bi bi-download me-2"></i> Export
+        <li class="mb-1 {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name in 'results_list,influencer_detail' %}active{% endif %}">
+            <a href="{% url 'influencers:results_list' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name in 'results_list,influencer_detail' %}active{% endif %}">
+                <i class="bi bi-list-check me-2 fs-5"></i> Classification Results
             </a>
         </li>
-        <li>
-            <a href="#" class="text-white text-decoration-none py-2 px-3 d-block rounded">
-                <i class="bi bi-gear me-2"></i> Settings
+        <li class="mb-1 {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+            <a href="{% url 'dashboard:analytics' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                <i class="bi bi-bar-chart me-2 fs-5"></i> Analytics
             </a>
         </li>
-        <li>
-            <a href="{% url 'influencers:results_list' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if 'results' in request.resolver_match.url_name %}active{% endif %}">
-                <i class="bi bi-list-check me-2"></i> Results
+        <li class="mb-1 {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name == 'export_results' %}active{% endif %}">
+            <a href="{% url 'influencers:export_results' %}" class="text-white text-decoration-none py-2 px-3 d-flex align-items-center rounded {% if request.resolver_match.namespace == 'influencers' and request.resolver_match.url_name == 'export_results' %}active{% endif %}">
+                <i class="bi bi-download me-2 fs-5"></i> Export Data
             </a>
         </li>
-        <li>
-            <a href="{% url 'dashboard:analytics' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
-                <i class="bi bi-bar-chart me-2"></i> Analytics
+        <li class="mb-1">
+            <a href="javascript:void(0);" class="text-white-50 text-decoration-none py-2 px-3 d-flex align-items-center justify-content-between rounded disabled opacity-50" data-bs-toggle="tooltip" data-bs-placement="right" title="Coming Soon">
+                <span><i class="bi bi-gear me-2 fs-5"></i> Settings</span>
+                <span class="badge bg-secondary ms-auto small opacity-75">Soon</span>
             </a>
         </li>
     </ul>
