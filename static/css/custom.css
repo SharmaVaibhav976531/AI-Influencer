@@ -101,3 +101,16 @@ body {
     background: #495057;
     border-radius: 3px;
 }
+/* Upload Area Styles */
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.upload-area {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload-area:hover {
+    background-color: #f8f9fa;
+}

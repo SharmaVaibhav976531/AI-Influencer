@@ -1,0 +1,162 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Upload File | Influencer Discovery Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Upload Influencer Data</h2>
+    <a href="{% url 'uploads:history' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history me-2"></i> View History
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="mb-0 fw-bold">Select File to Upload</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    
+                    <!-- Drag and Drop Area -->
+                    <div class="upload-area border border-2 border-dashed rounded-3 p-5 text-center mb-4" id="dropZone">
+                        <i class="bi bi-cloud-arrow-up display-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Drag & Drop your file here</h5>
+                        <p class="text-muted mb-3">or</p>
+                        <label for="id_file" class="btn btn-primary">
+                            <i class="bi bi-folder2-open me-2"></i> Browse Files
+                        </label>
+                        <p class="small text-muted mt-3 mb-0">
+                            Allowed formats: <strong>CSV, XLSX</strong> | Max size: <strong>10MB</strong>
+                        </p>
+                        <input type="file" name="file" id="id_file" class="d-none" accept=".csv,.xlsx">
+                    </div>
+                    
+                    <!-- Selected File Info -->
+                    <div id="fileInfo" class="alert alert-info d-none">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                <span id="fileName"></span>
+                                <span id="fileSize" class="text-muted ms-2"></span>
+                            </div>
+                            <button type="button" class="btn-close" id="clearFile" aria-label="Close"></button>
+                        </div>
+                    </div>
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold" id="submitBtn" disabled>
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="submitSpinner" role="status"></span>
+                        <i class="bi bi-upload me-2"></i> Upload & Process
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i> Required Columns</h6>
+                <p class="text-muted small mb-2">Ensure your file contains the following columns (case-insensitive):</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-light text-dark border">Name</span>
+                    <span class="badge bg-light text-dark border">Handle</span>
+                    <span class="badge bg-light text-dark border">Platform</span>
+                    <span class="badge bg-light text-dark border">Followers</span>
+                    <span class="badge bg-light text-dark border">Bio</span>
+                    <span class="badge bg-light text-dark border">Description</span>
+                    <span class="badge bg-light text-dark border">Posts</span>
+                    <span class="badge bg-light text-dark border">Language</span>
+                    <span class="badge bg-light text-dark border">Location</span>
+                    <span class="badge bg-light text-dark border">Profile URL</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('id_file');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const clearFile = document.getElementById('clearFile');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const uploadForm = document.getElementById('uploadForm');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('border-primary', 'bg-light'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-primary', 'bg-light'), false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        fileInput.files = e.dataTransfer.files;
+        handleFiles(fileInput.files);
+    }
+
+    fileInput.addEventListener('change', function() { handleFiles(this.files); });
+
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            if (!['csv', 'xlsx'].includes(ext)) {
+                alert('Invalid file type. Please upload a CSV or XLSX file.');
+                clearSelection(); return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10MB limit.');
+                clearSelection(); return;
+            }
+
+            fileName.textContent = file.name;
+            fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            fileInfo.classList.remove('d-none');
+            submitBtn.disabled = false;
+        }
+    }
+
+    clearFile.addEventListener('click', clearSelection);
+
+    function clearSelection() {
+        fileInput.value = '';
+        fileInfo.classList.add('d-none');
+        submitBtn.disabled = true;
+    }
+
+    uploadForm.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitSpinner.classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

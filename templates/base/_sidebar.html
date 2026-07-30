@@ -9,8 +9,13 @@
             </a>
         </li>
         <li>
-            <a href="#" class="text-white text-decoration-none py-2 px-3 d-block rounded">
+            <a href="{% url 'uploads:upload' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
                 <i class="bi bi-cloud-upload me-2"></i> Upload Files
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'uploads:history' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+                <i class="bi bi-clock-history me-2"></i> Upload History
             </a>
         </li>
         <li>

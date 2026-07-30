@@ -6,15 +6,10 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # Redirect root URL to dashboard (which will redirect to login if unauthenticated)
     path('', RedirectView.as_view(url='/dashboard/', permanent=False)),
-    
-    # Authentication URLs (/login/, /logout/)
     path('', include('apps.authentication.urls')),
-    
-    # Dashboard URLs (/dashboard/)
     path('dashboard/', include('apps.dashboard.urls')),
+    path('uploads/', include('apps.uploads.urls')),
 ]
 
 # Serve media files in development
