@@ -1,0 +1,103 @@
+/* General Layout */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    padding-top: 60px; /* Offset for fixed navbar */
+}
+
+/* Sidebar Styles */
+#sidebar {
+    min-width: 260px;
+    max-width: 260px;
+    min-height: calc(100vh - 60px);
+    position: fixed;
+    left: 0;
+    top: 60px;
+    z-index: 999;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+}
+
+#sidebar.active {
+    margin-left: -260px;
+}
+
+#sidebar ul li a {
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+#sidebar ul li a:hover {
+    background-color: #343a40;
+}
+
+#sidebar ul li.active a {
+    background-color: #0d6efd;
+    font-weight: 500;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 60px);
+}
+
+.main-content.full-width {
+    margin-left: 0;
+    width: 100%;
+}
+
+/* Cards */
+.card-stat {
+    transition: transform 0.2s ease;
+}
+
+.card-stat:hover {
+    transform: translateY(-3px);
+}
+
+/* Footer */
+.footer {
+    margin-top: auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -260px;
+    }
+    
+    #sidebar.active {
+        margin-left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Custom Scrollbar for Sidebar */
+#sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-track {
+    background: #212529;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+    background: #495057;
+    border-radius: 3px;
+}
