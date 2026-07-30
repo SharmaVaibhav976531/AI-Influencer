@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from apps.uploads.models import Upload
+from apps.influencers.models import Influencer
 
 @login_required
 def home_view(request):
@@ -10,7 +11,10 @@ def home_view(request):
     total_rows = sum(upload.total_rows for upload in user_uploads.filter(status=Upload.Status.SUCCESS))
     successful_uploads = user_uploads.filter(status=Upload.Status.SUCCESS).count()
     failed_uploads = user_uploads.filter(status=Upload.Status.FAILED).count()
-    
+
+    # NEW: NLP Stats
+    nlp_processed_count = Influencer.objects.filter(upload__user=request.user, nlp_processed_at__isnull=False).count()
+
     recent_uploads = user_uploads.order_by('-created_at')[:5]
 
     context = {
@@ -19,6 +23,7 @@ def home_view(request):
         'total_rows': total_rows,
         'successful_uploads': successful_uploads,
         'failed_uploads': failed_uploads,
+        'nlp_processed_count': nlp_processed_count,
         'recent_uploads': recent_uploads,
     }
     return render(request, 'dashboard/home.html', context)

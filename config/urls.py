@@ -10,6 +10,7 @@ urlpatterns = [
     path('', include('apps.authentication.urls')),
     path('dashboard/', include('apps.dashboard.urls')),
     path('uploads/', include('apps.uploads.urls')),
+    path('influencers/', include('apps.influencers.urls')),
 ]
 
 # Serve media files in development

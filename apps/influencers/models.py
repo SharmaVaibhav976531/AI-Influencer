@@ -36,6 +36,17 @@ class Influencer(TimeStampedModel):
     is_active = models.BooleanField(default=True)
     raw_data = models.JSONField(default=dict, blank=True)
 
+    # NLP Fields
+    language_detected = models.CharField(max_length=50, blank=True, null=True)
+    language_confidence = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    extracted_keywords = models.JSONField(default=list, blank=True)
+    extracted_entities = models.JSONField(default=dict, blank=True)
+    rule_based_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    nlp_matched_groups = models.JSONField(default=list, blank=True)
+    nlp_matched_keywords = models.JSONField(default=list, blank=True)
+    nlp_processed_at = models.DateTimeField(null=True, blank=True)
+    
+
     objects = models.Manager()
     active_objects = ActiveInfluencerManager()
 

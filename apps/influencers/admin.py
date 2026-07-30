@@ -18,6 +18,10 @@ class InfluencerAdmin(admin.ModelAdmin):
         ('Details', {
             'fields': ('bio', 'description', 'language', 'location', 'email', 'website')
         }),
+        ('NLP Analysis', {
+            'fields': ('language_detected', 'language_confidence', 'rule_based_score', 'nlp_matched_groups', 'nlp_matched_keywords', 'extracted_keywords', 'extracted_entities', 'nlp_processed_at'),
+            'classes': ('collapse',)
+        }),
         ('System', {
             'fields': ('upload', 'is_active', 'raw_data', 'created_at', 'updated_at'),
             'classes': ('collapse',)
