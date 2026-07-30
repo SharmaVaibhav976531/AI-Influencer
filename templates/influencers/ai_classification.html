@@ -10,13 +10,14 @@
     </a>
 </div>
 
+<!-- Overview Stats Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center">
                 <i class="bi bi-cpu text-primary fs-1 mb-2"></i>
                 <h6 class="text-muted small text-uppercase">NLP Processed</h6>
-                <h3 class="fw-bold mb-0">{{ total_nlp_processed }}</h3>
+                <h3 class="fw-bold mb-0" id="totalNlpProcessed">{{ total_nlp_processed }}</h3>
             </div>
         </div>
     </div>
@@ -25,7 +26,7 @@
             <div class="card-body text-center">
                 <i class="bi bi-check-circle text-success fs-1 mb-2"></i>
                 <h6 class="text-muted small text-uppercase">AI Classified</h6>
-                <h3 class="fw-bold mb-0">{{ total_classified }}</h3>
+                <h3 class="fw-bold mb-0" id="totalClassified">{{ total_classified }}</h3>
             </div>
         </div>
     </div>
@@ -34,13 +35,14 @@
             <div class="card-body text-center">
                 <i class="bi bi-hourglass-split text-warning fs-1 mb-2"></i>
                 <h6 class="text-muted small text-uppercase">Pending Classification</h6>
-                <h3 class="fw-bold mb-0">{{ pending_count }}</h3>
+                <h3 class="fw-bold mb-0" id="pendingCount">{{ pending_count }}</h3>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<!-- Initial Ready Card -->
+<div class="card border-0 shadow-sm" id="initialCard">
     <div class="card-body p-5 text-center">
         {% if pending_count > 0 %}
             <div class="mb-4">
@@ -52,12 +54,12 @@
                 </p>
                 <div class="alert alert-info d-inline-block text-start mt-2">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>Note:</strong> Processing is sequential. Large batches may take several minutes.
-               3</div>
+                    <strong>Note:</strong> Real-time status updates, stage tracking, and terminal logging are active.
+                </div>
             </div>
-            <form method="post">
+            <form id="startClassificationForm" method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-primary btn-lg px-5">
+                <button type="submit" id="startBtn" class="btn btn-primary btn-lg px-5">
                     <i class="bi bi-play-fill me-2"></i> Start AI Classification
                 </button>
             </form>
@@ -69,10 +71,365 @@
                     All {{ total_nlp_processed }} influencers have been successfully analyzed by the AI engine.
                 </p>
             </div>
-            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-primary btn-lg px-5">
-                <i class="bi bi-speedometer2 me-2"></i> View Dashboard
+            <a href="{% url 'influencers:results_list' %}" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-list-task me-2"></i> View Results
             </a>
         {% endif %}
     </div>
 </div>
+
+<!-- Real-Time Progress Section (Hidden by Default) -->
+<div class="card border-0 shadow-sm d-none" id="progressSection">
+    <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold mb-0 d-flex align-items-center">
+            <span class="spinner-border spinner-border-sm text-primary me-3" role="status"></span>
+            AI Classification Running...
+        </h4>
+        <span class="badge bg-primary fs-6 px-3 py-2" id="headerProgressPct">0%</span>
+    </div>
+    
+    <div class="card-body p-4">
+        <!-- Progress Bar -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between mb-2 small fw-bold text-muted">
+                <span>Processed: <span id="processedText">0</span> / <span id="pendingTotalText">{{ pending_count }}</span></span>
+                <span id="progressPercentText">0%</span>
+            </div>
+            <div class="progress style-progress" style="height: 18px;">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+
+        <!-- Live Statistics Cards Grid -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-light rounded text-center">
+                    <span class="text-muted small d-block">Currently Processing</span>
+                    <strong class="text-primary text-truncate d-block" id="currentHandleText">--</strong>
+                    <span class="badge bg-info text-dark mt-1" id="currentStageBadge">Starting</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="p-3 bg-light rounded text-center">
+                    <span class="text-muted small d-block">Success</span>
+                    <strong class="text-success fs-4" id="successCounter">0</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="p-3 bg-light rounded text-center">
+                    <span class="text-muted small d-block">Failed</span>
+                    <strong class="text-danger fs-4" id="failedCounter">0</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="p-3 bg-light rounded text-center">
+                    <span class="text-muted small d-block">Remaining</span>
+                    <strong class="text-secondary fs-4" id="remainingCounter">{{ pending_count }}</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-light rounded text-center">
+                    <span class="text-muted small d-block">Elapsed / ETA</span>
+                    <strong class="text-dark fs-5" id="elapsedTimeText">00:00</strong>
+                    <span class="small text-muted ms-1">(ETA: <span id="etaTimeText">--:--</span>)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage Pipeline Indicators Stepper -->
+        <div class="card bg-light border-0 mb-4">
+            <div class="card-body py-3">
+                <h6 class="fw-bold small text-muted text-uppercase mb-2">Classification Pipeline Stages</h6>
+                <div class="d-flex flex-wrap gap-2 align-items-center" id="stagePipeline">
+                    <span class="badge bg-secondary opacity-75 px-3 py-2" id="stage-Prompt-Generated"><i class="bi bi-file-earmark-text me-1"></i> Generating Prompt</span>
+                    <i class="bi bi-chevron-right text-muted small"></i>
+                    <span class="badge bg-secondary opacity-75 px-3 py-2" id="stage-Sending-Request"><i class="bi bi-send me-1"></i> Sending Request</span>
+                    <i class="bi bi-chevron-right text-muted small"></i>
+                    <span class="badge bg-secondary opacity-75 px-3 py-2" id="stage-Response-Received"><i class="bi bi-cloud-download me-1"></i> Waiting for AI</span>
+                    <i class="bi bi-chevron-right text-muted small"></i>
+                    <span class="badge bg-secondary opacity-75 px-3 py-2" id="stage-JSON-Parsed"><i class="bi bi-code-square me-1"></i> Parsing Response</span>
+                    <i class="bi bi-chevron-right text-muted small"></i>
+                    <span class="badge bg-secondary opacity-75 px-3 py-2" id="stage-Saving-Result"><i class="bi bi-hdd-network me-1"></i> Saving Result</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Granular Error & Retry Log Table -->
+        <div class="card border-0 shadow-none d-none" id="errorLogCard">
+            <div class="card-header bg-warning bg-opacity-10 border-0 fw-bold text-dark py-2">
+                <i class="bi bi-exclamation-triangle me-2 text-warning"></i> Exception & Retry Activity Feed (<span id="retryCounter">0</span> retries)
+            </div>
+            <div class="table-responsive" style="max-height: 200px;">
+                <table class="table table-sm align-middle mb-0" id="errorFeedTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Handle</th>
+                            <th>Attempt</th>
+                            <th>Status Code</th>
+                            <th>Reason / Error Message</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="errorFeedBody">
+                        <!-- Dynamic Error Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Completion Screen Card (Hidden by Default) -->
+<div class="card border-0 shadow-sm d-none" id="completionSection">
+    <div class="card-body p-5 text-center">
+        <div class="mb-4">
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-check-circle-fill text-success display-1"></i>
+            </div>
+            <h3 class="fw-bold">AI Classification Completed Successfully</h3>
+            <p class="text-muted">All pending influencers have been analyzed and updated in the database.</p>
+        </div>
+
+        <!-- Summary Badges -->
+        <div class="row justify-content-center g-3 mb-4">
+            <div class="col-md-2">
+                <div class="p-3 bg-light rounded">
+                    <span class="text-muted small d-block">Processed</span>
+                    <strong class="fs-4 text-dark" id="compProcessed">0</strong>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="p-3 bg-success bg-opacity-10 rounded">
+                    <span class="text-success small d-block">Successful</span>
+                    <strong class="fs-4 text-success" id="compSuccess">0</strong>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="p-3 bg-danger bg-opacity-10 rounded">
+                    <span class="text-danger small d-block">Failed</span>
+                    <strong class="fs-4 text-danger" id="compFailed">0</strong>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="p-3 bg-light rounded">
+                    <span class="text-muted small d-block">Total Time</span>
+                    <strong class="fs-4 text-dark" id="compTotalTime">00:00</strong>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="p-3 bg-light rounded">
+                    <span class="text-muted small d-block">Avg / Record</span>
+                    <strong class="fs-4 text-dark" id="compAvgTime">0.00s</strong>
+                </div>
+            </div>
+        </div>
+
+        <a href="{% url 'influencers:results_list' %}" class="btn btn-success btn-lg px-5 py-3 fw-bold">
+            <i class="bi bi-arrow-right-circle me-2"></i> View Results
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const startForm = document.getElementById('startClassificationForm');
+        const initialCard = document.getElementById('initialCard');
+        const progressSection = document.getElementById('progressSection');
+        const completionSection = document.getElementById('completionSection');
+        
+        // Progress UI Elements
+        const progressBar = document.getElementById('progressBar');
+        const progressPercentText = document.getElementById('progressPercentText');
+        const headerProgressPct = document.getElementById('headerProgressPct');
+        const processedText = document.getElementById('processedText');
+        const pendingTotalText = document.getElementById('pendingTotalText');
+        const currentHandleText = document.getElementById('currentHandleText');
+        const currentStageBadge = document.getElementById('currentStageBadge');
+        
+        const successCounter = document.getElementById('successCounter');
+        const failedCounter = document.getElementById('failedCounter');
+        const remainingCounter = document.getElementById('remainingCounter');
+        const elapsedTimeText = document.getElementById('elapsedTimeText');
+        const etaTimeText = document.getElementById('etaTimeText');
+        const retryCounter = document.getElementById('retryCounter');
+        const errorLogCard = document.getElementById('errorLogCard');
+        const errorFeedBody = document.getElementById('errorFeedBody');
+
+        // Completion Elements
+        const compProcessed = document.getElementById('compProcessed');
+        const compSuccess = document.getElementById('compSuccess');
+        const compFailed = document.getElementById('compFailed');
+        const compTotalTime = document.getElementById('compTotalTime');
+        const compAvgTime = document.getElementById('compAvgTime');
+
+        let startTime = null;
+        let timerInterval = null;
+        let totalPending = parseInt("{{ pending_count }}", 10) || 0;
+        let retryTotalCount = 0;
+
+        const STAGE_IDS = {
+            "Generating Prompt": "stage-Prompt-Generated",
+            "Prompt Generated": "stage-Prompt-Generated",
+            "Sending Request": "stage-Sending-Request",
+            "Response Received": "stage-Response-Received",
+            "Parsing Response": "stage-JSON-Parsed",
+            "JSON Parsed": "stage-JSON-Parsed",
+            "Saving Result": "stage-Saving-Result"
+        };
+
+        if (startForm) {
+            startForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // Switch cards
+                initialCard.classList.add('d-none');
+                progressSection.classList.remove('d-none');
+
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimers, 1000);
+
+                const streamUrl = "{% url 'influencers:ai_classification_stream' %}";
+                const eventSource = new EventSource(streamUrl);
+
+                eventSource.onmessage = function (e) {
+                    try {
+                        const data = JSON.parse(e.data);
+
+                        if (data.type === 'start') {
+                            if (data.pending_total !== undefined) {
+                                totalPending = data.pending_total;
+                                pendingTotalText.textContent = totalPending;
+                                remainingCounter.textContent = totalPending;
+                            }
+                        } else if (data.type === 'stage_update') {
+                            handleStageUpdate(data);
+                        } else if (data.type === 'item_complete') {
+                            handleItemComplete(data);
+                        } else if (data.type === 'complete') {
+                            eventSource.close();
+                            clearInterval(timerInterval);
+                            handleComplete(data);
+                        }
+                    } catch (err) {
+                        console.error("Failed to parse SSE payload:", err);
+                    }
+                };
+
+                eventSource.onerror = function (err) {
+                    console.error("SSE connection error:", err);
+                    eventSource.close();
+                    clearInterval(timerInterval);
+                    
+                    // Fallback to standard form submission if SSE stream breaks
+                    if (confirm("Streaming connection was interrupted. Would you like to fallback to standard form processing?")) {
+                        startForm.submit();
+                    }
+                };
+            });
+        }
+
+        function updateTimers() {
+            if (!startTime) return;
+            const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+            const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+            const secs = String(elapsedSec % 60).padStart(2, '0');
+            elapsedTimeText.textContent = `${mins}:${secs}`;
+
+            // Calculate ETA
+            const currentProcessed = parseInt(processedText.textContent, 10) || 0;
+            if (currentProcessed > 0 && totalPending > currentProcessed) {
+                const avgSecPerItem = elapsedSec / currentProcessed;
+                const remainingItems = totalPending - currentProcessed;
+                const etaSec = Math.round(avgSecPerItem * remainingItems);
+                const etaMins = String(Math.floor(etaSec / 60)).padStart(2, '0');
+                const etaSecs = String(etaSec % 60).padStart(2, '0');
+                etaTimeText.textContent = `${etaMins}:${etaSecs}`;
+            }
+        }
+
+        function handleStageUpdate(data) {
+            currentHandleText.textContent = "@" + (data.handle || "processing");
+            currentStageBadge.textContent = data.stage;
+
+            if (data.stage === "Retry" && data.details) {
+                retryTotalCount++;
+                retryCounter.textContent = retryTotalCount;
+                errorLogCard.classList.remove('d-none');
+
+                const row = document.createElement('tr');
+                row.className = 'table-warning';
+                row.innerHTML = `
+                    <td class="fw-bold">@${data.handle}</td>
+                    <td>Attempt ${data.details.attempt}/${data.details.max_retries}</td>
+                    <td><span class="badge bg-secondary">${data.details.status_code || '429'}</span></td>
+                    <td class="small text-truncate" style="max-width: 250px;" title="${data.details.reason}">${data.details.reason}</td>
+                    <td><span class="badge bg-warning text-dark">Retrying (${data.details.retries_left} left)</span></td>
+                `;
+                errorFeedBody.prepend(row);
+            }
+
+            highlightStage(data.stage);
+        }
+
+        function highlightStage(stageName) {
+            Object.values(STAGE_IDS).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.className = 'badge bg-secondary opacity-75 px-3 py-2';
+                }
+            });
+
+            const activeId = STAGE_IDS[stageName];
+            if (activeId) {
+                const activeEl = document.getElementById(activeId);
+                if (activeEl) {
+                    activeEl.className = 'badge bg-primary px-3 py-2 shadow-sm animate__animated animate__pulse';
+                }
+            }
+        }
+
+        function handleItemComplete(data) {
+            const processed = data.processed;
+            const total = data.pending_total || totalPending;
+            const pct = data.completion_pct || (total > 0 ? Math.round((processed / total) * 100) : 0);
+
+            progressBar.style.width = pct + '%';
+            progressBar.setAttribute('aria-valuenow', pct);
+            progressPercentText.textContent = pct + '%';
+            headerProgressPct.textContent = pct + '%';
+
+            processedText.textContent = processed;
+            successCounter.textContent = data.success;
+            failedCounter.textContent = data.failed;
+            remainingCounter.textContent = data.remaining;
+
+            if (data.last_error && data.failed > 0) {
+                errorLogCard.classList.remove('d-none');
+                const row = document.createElement('tr');
+                row.className = 'table-danger';
+                row.innerHTML = `
+                    <td class="fw-bold">@${data.handle}</td>
+                    <td>Final Attempt</td>
+                    <td><span class="badge bg-danger">Error</span></td>
+                    <td class="small text-truncate" style="max-width: 250px;" title="${data.last_error.reason || 'Failed'}">${data.last_error.reason || 'Failed'}</td>
+                    <td><span class="badge bg-danger">FAILED</span></td>
+                `;
+                errorFeedBody.prepend(row);
+            }
+        }
+
+        function handleComplete(data) {
+            progressSection.classList.add('d-none');
+            completionSection.classList.remove('d-none');
+
+            compProcessed.textContent = data.processed || 0;
+            compSuccess.textContent = data.success || 0;
+            compFailed.textContent = data.failed || 0;
+            compTotalTime.textContent = data.total_time_str || '00:00';
+            compAvgTime.textContent = (data.avg_time_seconds || 0) + 's';
+        }
+    });
+</script>
 {% endblock %}

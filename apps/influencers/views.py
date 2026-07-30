@@ -1,9 +1,12 @@
+import time
+import json
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Avg
 from django.utils import timezone
+from django.http import StreamingHttpResponse
 
 from apps.influencers.models import Influencer
 from apps.influencers.services import openrouter_service
@@ -41,6 +44,209 @@ def nlp_processing_view(request):
         'avg_score': round(avg_score, 2) if avg_score else 0,
     }
     return render(request, 'influencers/nlp_dashboard.html', context)
+
+
+@login_required
+def ai_classification_stream_view(request):
+    """
+    Server-Sent Events (SSE) stream endpoint providing real-time AI classification progress,
+    terminal logs, live statistics, stage indicators, and error reporting.
+    """
+    def event_stream():
+        user = request.user
+        
+        total_nlp_processed = Influencer.objects.filter(upload__user=user, nlp_processed_at__isnull=False).count()
+        total_classified = Classification.objects.filter(influencer__upload__user=user, status='COMPLETED').count()
+        
+        pending_influencers = list(Influencer.objects.filter(
+            upload__user=user,
+            nlp_processed_at__isnull=False
+        ).exclude(
+            classifications__status='COMPLETED'
+        ).distinct())
+        
+        pending_total = len(pending_influencers)
+        
+        # Terminal Header Banner
+        logger.info("\n" + "=" * 57)
+        logger.info("AI CLASSIFICATION STARTED")
+        logger.info("=" * 57)
+        logger.info(f"Total Influencers Found : {total_nlp_processed}")
+        logger.info(f"Already Classified     : {total_classified}")
+        logger.info(f"Pending                : {pending_total}")
+        logger.info("-" * 57 + "\n")
+        
+        yield f"data: {json.dumps({'type': 'start', 'total_found': total_nlp_processed, 'already_classified': total_classified, 'pending_total': pending_total})}\n\n"
+        
+        if pending_total == 0:
+            logger.info("=" * 57)
+            logger.info("AI CLASSIFICATION COMPLETED")
+            logger.info("=" * 57)
+            logger.info("Total Records           : 0")
+            logger.info("Successful              : 0")
+            logger.info("Failed                  : 0")
+            logger.info("Skipped                 : 0")
+            logger.info("Total Time              : 00:00")
+            logger.info("Average Time Per Record : 0.00 sec")
+            logger.info("=" * 57 + "\n")
+            yield f"data: {json.dumps({'type': 'complete', 'pending_total': 0, 'processed': 0, 'success': 0, 'failed': 0, 'total_time_str': '00:00', 'avg_time_seconds': 0.0, 'total_retries': 0})}\n\n"
+            return
+
+        criteria = SearchCriteria.objects.filter(user=user, status='ACTIVE').first()
+        
+        start_batch_time = time.time()
+        processed_count = 0
+        success_count = 0
+        failed_count = 0
+        total_retry_count = 0
+        
+        for idx, inf in enumerate(pending_influencers, 1):
+            item_start_time = time.time()
+            logger.info(f"[{idx}/{pending_total}]")
+            logger.info(f"Handle: {inf.handle}")
+            logger.info("Starting AI Classification...")
+            
+            stage_updates = []
+            
+            def stage_callback(stage_name, details=None):
+                nonlocal total_retry_count
+                if stage_name == "Retry":
+                    total_retry_count += 1
+                
+                update_event = {
+                    'type': 'stage_update',
+                    'index': idx,
+                    'pending_total': pending_total,
+                    'handle': inf.handle,
+                    'stage': stage_name,
+                    'processed': processed_count,
+                    'success': success_count,
+                    'failed': failed_count,
+                    'remaining': pending_total - processed_count,
+                    'details': details
+                }
+                stage_updates.append(update_event)
+                
+            try:
+                result = openrouter_service.classify_influencer(inf, criteria, stage_callback=stage_callback)
+                
+                for stg_evt in stage_updates:
+                    yield f"data: {json.dumps(stg_evt)}\n\n"
+                stage_updates.clear()
+                
+                if stage_callback:
+                    stage_callback("Saving Result")
+                logger.info("✓ Database Updated")
+                
+                ai_rec = result.get('recommendation', 'Maybe').upper().replace(' ', '_')
+                if ai_rec not in ['RECOMMEND', 'MAYBE', 'REJECT']:
+                    ai_rec = 'MAYBE'
+                    
+                Classification.objects.create(
+                    influencer=inf,
+                    search_criteria=criteria,
+                    overall_score=result.get('overall_score', 0),
+                    confidence_score=result.get('confidence_score', 0),
+                    language_match=(result.get('language') == inf.language_detected),
+                    orientation_match=(result.get('orientation') == 'Supportive'),
+                    niche_match=True, 
+                    keyword_match=len(result.get('matched_keywords', [])) > 0,
+                    matched_keywords=result.get('matched_keywords', []),
+                    reason=result.get('reason', ''),
+                    recommendation=ai_rec,
+                    ai_response=result,
+                    status='COMPLETED',
+                    ai_model_name=result.get('ai_model_name', ''),
+                    processing_time_seconds=result.get('processing_time_seconds', 0),
+                    summary=result.get('summary', '')
+                )
+                logger.info("✓ Classification Completed")
+                
+                item_duration = time.time() - item_start_time
+                logger.info(f"Time Taken: {item_duration:.2f} sec\n")
+                
+                processed_count += 1
+                success_count += 1
+                
+            except Exception as e:
+                for stg_evt in stage_updates:
+                    yield f"data: {json.dumps(stg_evt)}\n\n"
+                stage_updates.clear()
+                
+                item_duration = time.time() - item_start_time
+                err_msg = str(e)
+                logger.error(f"FAILED\nReason: {err_msg}")
+                
+                Classification.objects.create(
+                    influencer=inf,
+                    search_criteria=criteria,
+                    status='FAILED',
+                    reason=err_msg
+                )
+                
+                processed_count += 1
+                failed_count += 1
+                logger.info(f"Time Taken: {item_duration:.2f} sec\n")
+                
+            remaining = pending_total - processed_count
+            completion_pct = round((processed_count / pending_total) * 100, 2)
+            
+            logger.info("Progress")
+            logger.info(f"Processed : {processed_count} / {pending_total}")
+            logger.info(f"Success   : {success_count}")
+            logger.info(f"Failed    : {failed_count}")
+            logger.info(f"Remaining : {remaining}")
+            logger.info(f"Completion: {completion_pct}%")
+            logger.info("-" * 57 + "\n")
+            
+            item_event = {
+                'type': 'item_complete',
+                'index': idx,
+                'pending_total': pending_total,
+                'handle': inf.handle,
+                'processed': processed_count,
+                'success': success_count,
+                'failed': failed_count,
+                'remaining': remaining,
+                'completion_pct': completion_pct,
+                'item_duration': round(item_duration, 2),
+                'total_retries': total_retry_count
+            }
+            yield f"data: {json.dumps(item_event)}\n\n"
+
+        total_batch_time = time.time() - start_batch_time
+        avg_time = round(total_batch_time / pending_total, 2) if pending_total > 0 else 0
+        mins, secs = divmod(int(total_batch_time), 60)
+        formatted_total_time = f"{mins:02d}:{secs:02d}"
+        
+        logger.info("=" * 57)
+        logger.info("AI CLASSIFICATION COMPLETED")
+        logger.info("=" * 57)
+        logger.info(f"Total Records           : {pending_total}")
+        logger.info(f"Successful              : {success_count}")
+        logger.info(f"Failed                  : {failed_count}")
+        logger.info(f"Skipped                 : 0")
+        logger.info(f"Total Time              : {formatted_total_time} ({total_batch_time:.2f}s)")
+        logger.info(f"Average Time Per Record : {avg_time:.2f} sec")
+        logger.info("=" * 57 + "\n")
+        
+        final_event = {
+            'type': 'complete',
+            'pending_total': pending_total,
+            'processed': processed_count,
+            'success': success_count,
+            'failed': failed_count,
+            'total_time_str': formatted_total_time,
+            'total_time_seconds': round(total_batch_time, 2),
+            'avg_time_seconds': avg_time,
+            'total_retries': total_retry_count
+        }
+        yield f"data: {json.dumps(final_event)}\n\n"
+
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
 
 
 @login_required
@@ -113,6 +319,7 @@ def ai_classification_view(request):
         'pending_count': pending_count,
     }
     return render(request, 'influencers/ai_classification.html', context)
+
 
 
 @login_required
