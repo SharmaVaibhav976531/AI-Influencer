@@ -69,3 +69,45 @@ class SidebarNavigationTest(TestCase):
         response = self.client.get(url)
         content = response.content.decode('utf-8')
         self.assertNotIn('href="#"', content)
+
+from django.test import override_settings
+
+class CustomErrorHandlerTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='err_user',
+            email='err@example.com',
+            password='Password123!'
+        )
+        self.client = Client()
+        self.client.login(username='err_user', password='Password123!')
+
+    def test_custom_404_preview_route(self):
+        """Verify /404/ preview route returns 404 status and renders custom 404 page."""
+        response = self.client.get('/404/')
+        self.assertEqual(response.status_code, 404)
+        content = response.content.decode('utf-8')
+        self.assertIn('404', content)
+        self.assertIn('Page Not Found', content)
+        self.assertIn('Go to Dashboard', content)
+
+    @override_settings(DEBUG=False)
+    def test_invalid_routes_return_custom_404_page(self):
+        """Verify non-existing routes return custom 404 page when DEBUG=False."""
+        invalid_urls = [
+            '/random-page-name/',
+            '/abc',
+            '/test123',
+            '/dashboard/random',
+            '/uploads/demo/test',
+            '/non-existing-page'
+        ]
+        for url in invalid_urls:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 404)
+            content = response.content.decode('utf-8')
+            self.assertIn('404', content)
+            self.assertIn('Page Not Found', content)
+            self.assertIn('Go to Dashboard', content)
+
+
