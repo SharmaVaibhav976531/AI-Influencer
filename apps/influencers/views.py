@@ -13,6 +13,8 @@ from .services.export_service import get_export_queryset, generate_csv_response,
 from .services.result_service import get_filtered_classifications
 from .forms import ResultFilterForm
 from django.core.paginator import Paginator
+from .services.discovery_service import DiscoveryService
+
 
 logger = logging.getLogger(__name__)
 
@@ -195,3 +197,38 @@ def export_results_view(request):
         logger.error(f"Export failed for user {request.user.username}: {str(e)}")
         messages.error(request, "An error occurred while generating the export. Please try again.")
         return redirect('influencers:results_list')
+
+
+@login_required
+def discovery_view(request):
+    if request.method == 'POST':
+        criteria = {
+            'keywords': request.POST.get('keywords', ''),
+            'platform': request.POST.get('platform', 'INSTAGRAM'),
+            'language': request.POST.get('language', ''),
+            'min_followers': request.POST.get('min_followers', 0),
+            'max_results': int(request.POST.get('max_results', 5))
+        }
+        
+        try:
+            messages.info(request, "Starting real-time discovery and processing. This may take a moment...")
+            result = DiscoveryService.execute(request.user, criteria)
+            
+            if result['processed'] > 0:
+                messages.success(
+                    request, 
+                    f"Discovery complete! Found {result['discovered']} new influencers. "
+                    f"Successfully processed {result['processed']} through NLP and AI. "
+                    f"Skipped {result['skipped']} duplicates."
+                )
+            else:
+                messages.warning(request, "No new influencers were discovered or all were duplicates.")
+                
+        except Exception as e:
+            logger.error(f"Discovery failed: {str(e)}")
+            messages.error(request, f"Discovery failed: {str(e)}")
+            
+        return redirect('influencers:results_list')
+        
+    return render(request, 'influencers/discovery.html')
+

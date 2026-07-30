@@ -44,6 +44,18 @@
                                 <span class="text-muted small">N/A</span>
                             {% endif %}
                         </td>
+                        <!-- Update the Name / Handle column to include the source badge -->
+                        <td>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-bold">{{ classification.influencer.name }}</span>
+                                {% if classification.influencer.source != 'UPLOADED' %}
+                                    <span class="badge bg-info text-dark" style="font-size: 0.65rem;">
+                                        <i class="bi bi-globe me-1"></i>{{ classification.influencer.get_source_display }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">@{{ classification.influencer.handle }}</small>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>

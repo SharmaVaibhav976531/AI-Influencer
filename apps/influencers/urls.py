@@ -9,4 +9,5 @@ urlpatterns = [
     path('results/', views.results_list_view, name='results_list'),
     path('results/<int:pk>/', views.influencer_detail_view, name='influencer_detail'),
     path('results/export/', views.export_results_view, name='export_results'),
+    path('discovery/', views.discovery_view, name='discovery'),
 ]

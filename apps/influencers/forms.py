@@ -26,3 +26,10 @@ class ResultFilterForm(forms.Form):
     max_followers = forms.IntegerField(required=False, min_value=0, widget=forms.NumberInput(attrs={
         'class': 'form-control form-control-sm', 'placeholder': 'Max'
     }))
+
+    source = forms.ChoiceField(required=False, choices=[
+        ('', 'All Sources'),
+        ('UPLOADED', 'Uploaded'),
+        ('MOCK', 'Discovered (Mock)'),
+        ('INSTAGRAM', 'Discovered (Instagram)'),
+    ])

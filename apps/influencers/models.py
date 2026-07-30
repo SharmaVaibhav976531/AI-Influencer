@@ -45,7 +45,32 @@ class Influencer(TimeStampedModel):
     nlp_matched_groups = models.JSONField(default=list, blank=True)
     nlp_matched_keywords = models.JSONField(default=list, blank=True)
     nlp_processed_at = models.DateTimeField(null=True, blank=True)
-    
+
+    # Link directly to user for discovered influencers
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='influencers'
+    )
+
+
+    # Real-Time Discovery Fields
+    source = models.CharField(
+        max_length=50, 
+        default='UPLOADED',
+        choices=[
+            ('UPLOADED', 'Uploaded File'),
+            ('MOCK', 'Mock Provider'),
+            ('INSTAGRAM', 'Instagram API'),
+            ('YOUTUBE', 'YouTube API'),
+            ('TWITTER', 'Twitter API'),
+            ('LINKEDIN', 'LinkedIn API')
+        ]
+    )
+    external_id = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    discovered_at = models.DateTimeField(blank=True, null=True)    
 
     objects = models.Manager()
     active_objects = ActiveInfluencerManager()

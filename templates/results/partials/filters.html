@@ -28,6 +28,15 @@
                 </select>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Source</label>
+                <select name="source" class="form-select form-select-sm">
+                    {% for val, label in form.source.field.choices %}
+                        <option value="{{ val }}" {% if form.source.value == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div class="row g-2 mb-3">
                 <div class="col-6">
                     <label class="form-label small fw-bold">Min Score</label>

@@ -1,3 +1,5 @@
+# apps/influencers/services/result_service.py
+
 from django.db.models import Q
 from django.core.paginator import Paginator
 from apps.classification.models import Classification
@@ -19,11 +21,11 @@ def get_filtered_classifications(user, query_params):
     """
     Builds an optimized, filtered, sorted, and paginated queryset of classifications.
     """
-    # Base queryset with optimization
     queryset = Classification.objects.filter(
-        status='COMPLETED',
-        influencer__upload__user=user
-    ).select_related('influencer', 'influencer__upload')
+        status='COMPLETED'
+    ).filter(
+        Q(influencer__upload__user=user) | Q(influencer__user=user)
+    ).select_related('influencer', 'influencer__upload', 'influencer__user')
 
     # 1. Global Search
     search = query_params.get('search', '').strip()
@@ -49,6 +51,11 @@ def get_filtered_classifications(user, query_params):
     recommendation = query_params.get('recommendation')
     if recommendation:
         queryset = queryset.filter(recommendation=recommendation)
+
+    # NEW: Source Filter
+    source = query_params.get('source')
+    if source:
+        queryset = queryset.filter(influencer__source=source)
 
     min_score = query_params.get('min_score')
     if min_score:
