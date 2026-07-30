@@ -1,3 +1,4 @@
+# apps/uploads/views.py
 import os
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,65 +8,45 @@ from django.core.paginator import Paginator
 
 from .forms import UploadFileForm
 from .models import Upload
-from .services import parse_and_validate_data
+from .services import process_upload_file
 
 logger = logging.getLogger(__name__)
 
 @login_required
 def upload_view(request):
-    """Handles file upload, validation, parsing, and preview generation."""
+    """Handles file upload and triggers the ETL processing pipeline."""
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             file = form.cleaned_data['file']
-            
             ext = file.name.split('.')[-1].lower()
             file_type = Upload.FileType.CSV if ext == 'csv' else Upload.FileType.XLSX
             
-            # Create Upload record initially as PENDING
+            # 1. Create Upload record initially as PENDING
             upload = Upload.objects.create(
                 user=request.user,
                 file=file,
                 original_filename=file.name,
                 file_type=file_type,
                 file_size=file.size,
-                status=Upload.Status.PENDING
+                status=Upload.Status.SUCCESS,  # File saved to disk successfully
+                processing_status=Upload.ProcessingStatus.PENDING
             )
             
             try:
-                file_path = upload.file.path
-                df, total_rows = parse_and_validate_data(file_path, file_type)
-                
-                # Update upload record with success data
-                upload.total_rows = total_rows
-                upload.status = Upload.Status.SUCCESS
-                
-                # Save preview data (first 10 rows)
-                preview_df = df.head(10)
-                preview_df = preview_df.where(pd.notnull(preview_df), None) # Replace NaN with None for JSON
-                upload.preview_data = preview_df.to_dict(orient='records')
-                
-                upload.save()
-                
-                messages.success(request, f"File '{file.name}' uploaded and processed successfully!")
+                # 2. Trigger the ETL processing pipeline (reads, cleans, validates, bulk inserts)
+                process_upload_file(upload.pk)
+                messages.success(request, f"File '{file.name}' processed successfully!")
                 return redirect('uploads:preview', pk=upload.pk)
                 
             except Exception as e:
-                # If parsing fails, mark as FAILED
-                upload.status = Upload.Status.FAILED
-                upload.error_message = str(e)
-                upload.save()
-                
-                # Delete the physical file to save space
-                if upload.file and os.path.isfile(upload.file.path):
-                    os.remove(upload.file.path)
-                    
-                messages.error(request, f"Upload failed: {str(e)}")
+                messages.error(request, f"Processing failed: {str(e)}")
                 return redirect('uploads:upload')
     else:
         form = UploadFileForm()
         
     return render(request, 'uploads/upload.html', {'form': form})
+
 
 @login_required
 def upload_history_view(request):
@@ -97,6 +78,7 @@ def upload_history_view(request):
         'statuses': Upload.Status.choices,
     }
     return render(request, 'uploads/history.html', context)
+
 
 @login_required
 def upload_preview_view(request, pk):

@@ -45,7 +45,11 @@ class Upload(TimeStampedModel):
     )
     error_message = models.TextField(blank=True, null=True)
     preview_data = models.JSONField(default=list, blank=True, help_text="First 10 rows as JSON")
-    
+    processing_summary = models.JSONField(
+        default=dict, 
+        blank=True, 
+        help_text="Processing statistics: total_rows, imported, duplicates, invalid, processing_time_seconds"
+    )
 
     def __str__(self):
         return f"{self.original_filename} - {self.user.username}"
