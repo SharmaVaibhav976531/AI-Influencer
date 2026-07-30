@@ -18,8 +18,11 @@ class Influencer(TimeStampedModel):
     upload = models.ForeignKey(
         'uploads.Upload', 
         on_delete=models.CASCADE, 
+        null=True,
+        blank=True,
         related_name='influencers'
     )
+
     name = models.CharField(max_length=255)
     handle = models.CharField(max_length=255, db_index=True)
     platform = models.CharField(max_length=20, choices=Platform.choices, db_index=True)

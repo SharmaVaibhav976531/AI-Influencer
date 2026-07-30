@@ -3,7 +3,7 @@ from django.utils import timezone
 from apps.influencers.models import Influencer
 from apps.influencers.services.provider_manager import ProviderManager
 from apps.influencers.services import process_influencer_nlp, openrouter_service
-from apps.uploads.utils import clean_text
+from apps.uploads.utils import clean_text, normalize_influencer_dict
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,10 @@ class DiscoveryService:
         for raw_data in raw_results:
             try:
                 # 1. Normalize Data
-                handle = clean_text(raw_data.get('handle', ''))
-                platform = raw_data.get('platform', 'OTHER').upper()
-                external_id = raw_data.get('external_id')
+                normalized = normalize_influencer_dict(raw_data)
+                handle = normalized['handle']
+                platform = normalized['platform']
+                external_id = normalized['external_id']
                 
                 if not handle:
                     logger.warning("Skipping record with no handle.")
@@ -33,7 +34,7 @@ class DiscoveryService:
                 is_duplicate = False
                 if external_id:
                     is_duplicate = Influencer.objects.filter(
-                        external_id=external_id, source=provider.name
+                        external_id=external_id, source=provider.name.upper()
                     ).exists()
                 
                 if not is_duplicate:
@@ -53,20 +54,21 @@ class DiscoveryService:
                     external_id=external_id,
                     source=provider.name.upper(),
                     discovered_at=timezone.now(),
-                    name=clean_text(raw_data.get('name', '')),
+                    name=normalized['name'],
                     handle=handle,
                     platform=platform,
-                    followers=int(raw_data.get('followers', 0)),
-                    following=int(raw_data.get('following', 0)),
-                    total_posts=int(raw_data.get('posts', 0)),
-                    bio=clean_text(raw_data.get('bio', '')),
-                    description=clean_text(raw_data.get('description', '')),
-                    language=clean_text(raw_data.get('language', '')),
-                    location=clean_text(raw_data.get('location', '')),
-                    website=clean_text(raw_data.get('website', '')),
-                    profile_url=clean_text(raw_data.get('profile_url', '')),
+                    followers=normalized['followers'],
+                    following=normalized['following'],
+                    total_posts=normalized['total_posts'],
+                    bio=normalized['bio'],
+                    description=normalized['description'],
+                    language=normalized['language'],
+                    location=normalized['location'],
+                    website=normalized['website'],
+                    profile_url=normalized['profile_url'],
                     raw_data=raw_data # Store raw provider response for auditing
                 )
+
                 discovered_count += 1
                 logger.info(f"Saved new discovered influencer: {influencer.handle}")
                 

@@ -35,7 +35,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'apps.authentication.middleware.IsolatedSessionMiddleware',
+    # 'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -122,6 +123,16 @@ SESSION_COOKIE_AGE = 1209600  # 2 weeks (in seconds)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Overridden by 'Remember Me' logic in views
 SESSION_COOKIE_HTTPONLY = True  # Prevents XSS access to session cookie
 SESSION_COOKIE_SECURE = False   # Set to True in production with HTTPS
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Session-Based CSRF Protection
+# Binds CSRF secrets to isolated sessions (admin_sessionid vs sessionid),
+# preventing cross-context CSRF token rotation collisions.
+CSRF_USE_SESSIONS = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = False   # Set to True in production with HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'
+
 
 # ==========================================
 # Email Configuration (Development)

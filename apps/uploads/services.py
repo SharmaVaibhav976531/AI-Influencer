@@ -6,7 +6,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from .models import Upload
-from .utils import normalize_headers, parse_followers, clean_text, normalize_platform
+from .utils import normalize_headers, parse_followers, clean_text, normalize_platform, normalize_influencer_dict
 from apps.influencers.models import Influencer 
 
 logger = logging.getLogger(__name__)
@@ -100,46 +100,52 @@ def process_upload_file(upload_id: int) -> None:
             raise ValidationError(f"Missing required columns: {', '.join(missing_cols)}")
             
         # 4. Save Preview Data (First 10 rows) for the UI
-        preview_df = df.head(10)
-        preview_df = preview_df.where(pd.notnull(preview_df), None) # Replace NaN with None for JSON
-        upload.preview_data = preview_df.to_dict(orient='records')
+        preview_data = []
+        for record in df.head(10).to_dict(orient='records'):
+            clean_record = {
+                str(k): ("" if pd.isna(v) or v is None else v)
+                for k, v in record.items()
+            }
+            preview_data.append(clean_record)
+        upload.preview_data = preview_data
+
             
         # 5. Iterate and Clean Data
         for _, row in df.iterrows():
             try:
-                name = clean_text(row.get('name'))
-                handle = clean_text(row.get('handle'))
-                platform = normalize_platform(row.get('platform'))
+                row_dict = row.to_dict()
+                normalized = normalize_influencer_dict(row_dict)
                 
                 # Validate required fields
-                if not name or not handle:
+                if not normalized['name'] or not normalized['handle']:
                     invalid_count += 1
                     continue
-                    
-                # Parse and clean optional fields
-                followers = parse_followers(row.get('followers', 0))
-                following = parse_followers(row.get('following', 0))
-                posts = parse_followers(row.get('posts', 0))
                 
-                # Create Influencer instance (not saved to DB yet)
+                # Clean raw_data dictionary for JSON field without NaNs
+                raw_data = {
+                    str(k): ("" if pd.isna(v) or v is None else str(v))
+                    for k, v in row_dict.items()
+                }
+
                 inf = Influencer(
                     upload=upload,
-                    name=name,
-                    handle=handle,
-                    platform=platform,
-                    followers=followers,
-                    following=following,
-                    total_posts=posts,
-                    bio=clean_text(row.get('bio')),
-                    description=clean_text(row.get('description')),
-                    language=clean_text(row.get('language')),
-                    location=clean_text(row.get('location')),
-                    profile_url=clean_text(row.get('profile_url')),
-                    email=clean_text(row.get('email')),
-                    website=clean_text(row.get('website')),
-                    raw_data={k: str(v) for k, v in row.to_dict().items() if pd.notna(v)}
+                    name=normalized['name'],
+                    handle=normalized['handle'],
+                    platform=normalized['platform'],
+                    followers=normalized['followers'],
+                    following=normalized['following'],
+                    total_posts=normalized['total_posts'],
+                    bio=normalized['bio'],
+                    description=normalized['description'],
+                    language=normalized['language'],
+                    location=normalized['location'],
+                    profile_url=normalized['profile_url'],
+                    email=normalized['email'],
+                    website=normalized['website'],
+                    raw_data=raw_data
                 )
                 influencers_to_create.append(inf)
+
                 
             except Exception as e:
                 logger.warning(f"Invalid row skipped during processing: {e}")

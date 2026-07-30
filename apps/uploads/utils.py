@@ -1,5 +1,7 @@
+# apps/uploads/utils.py
 import re
 import pandas as pd
+import numpy as np
 
 # Mapping of common header variations to standard schema names
 HEADER_MAPPING = {
@@ -24,49 +26,67 @@ def normalize_headers(df: pd.DataFrame) -> pd.DataFrame:
     df.rename(columns=HEADER_MAPPING, inplace=True)
     return df
 
-def clean_text(value) -> str | None:
-    """Clean text by stripping whitespace, removing duplicate spaces, and handling nulls."""
-    if pd.isna(value) or value is None:
-        return None
-    text = str(value).strip()
-    text = re.sub(r'\s+', ' ', text)  # Remove duplicate spaces
-    return text if text else None
+def clean_text(value, default: str = "") -> str:
+    """
+    Clean text by stripping whitespace, removing duplicate spaces, and handling nulls/NaNs.
+    Converts None, NaN, numpy.nan, empty, or whitespace-only values into `default` (default "").
+    Never returns None by default, preventing NOT NULL database constraint violations.
+    """
+    if value is None or pd.isna(value):
+        return default
+    
+    if isinstance(value, float) and np.isnan(value):
+        return default
 
-def parse_followers(value) -> int:
-    """Convert string representations of followers (e.g., '12K', '3.5M', '45,000') to integers."""
-    if pd.isna(value) or value == '':
-        return 0
+    text = str(value).strip()
+    text = re.sub(r'\s+', ' ', text)  # Collapse multiple whitespace characters into single space
+    return text if text else default
+
+def parse_followers(value, default: int = 0) -> int:
+    """
+    Convert string/numeric representations of followers/following/posts to non-negative integers.
+    Handles '12K', '3.5M', '45,000', floats, NaNs, and invalid strings cleanly.
+    """
+    if value is None or pd.isna(value):
+        return default
     
-    # Remove commas and spaces, convert to uppercase for consistent matching
+    if isinstance(value, float) and np.isnan(value):
+        return default
+
     clean_val = str(value).replace(',', '').replace(' ', '').upper()
+    if clean_val == '' or clean_val.lower() in ('n/a', 'none', 'null', 'nan', 'unknown'):
+        return default
     
-    # Match numbers (including decimals) followed by an optional K, M, or B suffix
     match = re.match(r'^([\d\.]+)([KMB]?)$', clean_val)
     if match:
-        num = float(match.group(1))
-        suffix = match.group(2)
-        
-        if suffix == 'K':
-            num *= 1_000
-        elif suffix == 'M':
-            num *= 1_000_000
-        elif suffix == 'B':
-            num *= 1_000_000_000
+        try:
+            num = float(match.group(1))
+            suffix = match.group(2)
             
-        return int(num)
+            if suffix == 'K':
+                num *= 1_000
+            elif suffix == 'M':
+                num *= 1_000_000
+            elif suffix == 'B':
+                num *= 1_000_000_000
+                
+            return max(0, int(num))
+        except (ValueError, OverflowError):
+            return default
     
-    # Fallback: try to parse as direct integer
     try:
-        return int(float(clean_val))
-    except ValueError:
-        return 0
+        val = int(float(clean_val))
+        return max(0, val)
+    except (ValueError, TypeError, OverflowError):
+        return default
 
-def normalize_platform(value) -> str:
+def normalize_platform(value, default: str = 'OTHER') -> str:
     """Normalize platform names to match Django model choices."""
-    if not value:
-        return 'OTHER'
+    cleaned = clean_text(value, default="")
+    if not cleaned:
+        return default
     
-    val = str(value).strip().lower()
+    val = cleaned.lower()
     if 'insta' in val:
         return 'INSTAGRAM'
     if 'youtube' in val or 'yt' in val:
@@ -78,4 +98,46 @@ def normalize_platform(value) -> str:
     if 'linkedin' in val or 'li' in val:
         return 'LINKEDIN'
     
-    return 'OTHER'
+    return default
+
+def clean_json(value, default: dict | None = None) -> dict:
+    """Normalize JSON/dict inputs, ensuring a non-null dict is returned."""
+    if default is None:
+        default = {}
+    if value is None or pd.isna(value):
+        return default
+    if isinstance(value, dict):
+        return value
+    return default
+
+def clean_list(value, default: list | None = None) -> list:
+    """Normalize list inputs, ensuring a non-null list is returned."""
+    if default is None:
+        default = []
+    if value is None or pd.isna(value):
+        return default
+    if isinstance(value, list):
+        return value
+    return default
+
+def normalize_influencer_dict(row: dict) -> dict:
+    """
+    Centralized normalization for Influencer record attributes from any input source
+    (CSV, Excel, API responses). Guarantees no NULL values are passed to non-null fields.
+    """
+    return {
+        'name': clean_text(row.get('name')),
+        'handle': clean_text(row.get('handle')),
+        'platform': normalize_platform(row.get('platform')),
+        'followers': parse_followers(row.get('followers')),
+        'following': parse_followers(row.get('following')),
+        'total_posts': parse_followers(row.get('posts', row.get('total_posts'))),
+        'bio': clean_text(row.get('bio')),
+        'description': clean_text(row.get('description')),
+        'language': clean_text(row.get('language')),
+        'location': clean_text(row.get('location')),
+        'profile_url': clean_text(row.get('profile_url')),
+        'email': clean_text(row.get('email')),
+        'website': clean_text(row.get('website')),
+        'external_id': clean_text(row.get('external_id')),
+    }

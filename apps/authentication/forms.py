@@ -1,6 +1,5 @@
-# apps/authentication/forms.py
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm, SetPasswordForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
@@ -40,18 +39,16 @@ class CustomLoginForm(AuthenticationForm):
         password = self.cleaned_data.get('password')
 
         if username is not None and password:
-            # If the input is an email, find the user and replace with their actual username
             try:
                 user = User.objects.get(email=username)
                 self.cleaned_data['username'] = user.username
             except User.DoesNotExist:
-                pass # It's either a valid username or invalid, let default auth handle it
+                pass
 
         return super().clean()
 
     def confirm_login_allowed(self, user):
         super().confirm_login_allowed(user)
-        # Block Superusers and Staff from logging into the frontend application
         if user.is_staff or user.is_superuser:
             raise ValidationError(
                 "This account is restricted to the Admin Panel. Please log in via /admin/.",
@@ -91,27 +88,3 @@ class CustomUserCreationForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise ValidationError("A user with that email already exists.")
         return email
-
-class CustomPasswordResetForm(PasswordResetForm):
-    """Forgot Password form with Bootstrap styling."""
-    email = forms.EmailField(
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Email Address'
-        })
-    )
-
-class CustomSetPasswordForm(SetPasswordForm):
-    """Reset Password confirmation form with Bootstrap styling."""
-    new_password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'New Password'
-        })
-    )
-    new_password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Confirm New Password'
-        })
-    )
