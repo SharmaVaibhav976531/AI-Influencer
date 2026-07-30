@@ -1,0 +1,44 @@
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">Recent Activity</div>
+    <div class="card-body">
+        <h6 class="fw-bold small text-uppercase text-muted">Latest Uploads</h6>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>File</th><th>Status</th><th>Date</th></tr>
+                </thead>
+                <tbody>
+                    {% for upload in recent.uploads %}
+                    <tr>
+                        <td>{{ upload.original_filename }}</td>
+                        <td><span class="badge bg-{{ upload.status|lower }}">{{ upload.status }}</span></td>
+                        <td>{{ upload.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-muted">No recent uploads</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h6 class="fw-bold small text-uppercase text-muted">Latest Classifications</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Influencer</th><th>Score</th><th>Recommendation</th></tr>
+                </thead>
+                <tbody>
+                    {% for c in recent.classifications %}
+                    <tr>
+                        <td>{{ c.influencer.name }}</td>
+                        <td>{{ c.overall_score }}%</td>
+                        <td><span class="badge bg-{{ c.recommendation|lower }}">{{ c.get_recommendation_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-muted">No recent classifications</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -3,11 +3,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Avg
+from django.utils import timezone
 
 from apps.influencers.models import Influencer
 from apps.influencers.services import openrouter_service
 from apps.classification.models import Classification, SearchCriteria
 from .services import batch_process_nlp, openrouter_service
+from .services.export_service import get_export_queryset, generate_csv_response, generate_excel_response
 from .services.result_service import get_filtered_classifications
 from .forms import ResultFilterForm
 from django.core.paginator import Paginator
@@ -153,3 +155,43 @@ def influencer_detail_view(request, pk):
     }
     return render(request, 'results/detail.html', context)
 
+
+@login_required
+def export_results_view(request):
+    """Handles exporting influencer results to CSV or Excel."""
+    if request.method != 'POST':
+        return redirect('influencers:results_list')
+        
+    export_format = request.POST.get('format', 'csv')
+    export_type = request.POST.get('export_type', 'filtered') # 'selected', 'filtered', 'all'
+    
+    try:
+        queryset = get_export_queryset(request, export_type)
+        
+        if not queryset.exists():
+            messages.warning(request, "No records found to export.")
+            return redirect('influencers:results_list')
+            
+        # Generate filename
+        timestamp = timezone.now().strftime("%Y%m%d_%H%M")
+        base_name = "influencer_results"
+        
+        # Add context to filename if filtered
+        platform = request.GET.get('platform', '')
+        if platform:
+            base_name += f"_{platform.lower()}"
+            
+        if export_format == 'excel':
+            filename = f"{base_name}_{timestamp}.xlsx"
+            response = generate_excel_response(queryset, filename)
+        else:
+            filename = f"{base_name}_{timestamp}.csv"
+            response = generate_csv_response(queryset, filename)
+            
+        logger.info(f"User {request.user.username} exported {queryset.count()} records as {export_format.upper()}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Export failed for user {request.user.username}: {str(e)}")
+        messages.error(request, "An error occurred while generating the export. Please try again.")
+        return redirect('influencers:results_list')

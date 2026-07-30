@@ -22,9 +22,13 @@
         </div>
         
         <div class="d-grid">
-            <a href="{% url 'influencers:influencer_detail' classification.influencer.id %}" class="btn btn-outline-primary btn-sm">
-                View Full Details
-            </a>
+            {% if classification.influencer_id %}
+                <a href="{% url 'influencers:influencer_detail' classification.influencer_id %}" class="btn btn-outline-primary btn-sm">
+                    View Full Details
+                </a>
+            {% else %}
+                <button class="btn btn-outline-secondary btn-sm" disabled>Details Unavailable</button>
+            {% endif %}
         </div>
     </div>
 </div>

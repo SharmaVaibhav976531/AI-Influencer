@@ -1,30 +1,60 @@
-<div class="card border-0 shadow-sm h-100">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-                <h5 class="fw-bold mb-0">{{ classification.influencer.name }}</h5>
-                <small class="text-muted">@{{ classification.influencer.handle }}</small>
-            </div>
-            <span class="badge bg-light text-dark border">{{ classification.influencer.get_platform_display }}</span>
-        </div>
-        
-        <p class="small text-muted mb-3">{{ classification.influencer.bio|truncatewords:15|default:"No bio available." }}</p>
-        
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <small class="text-muted d-block">Followers</small>
-                <span class="fw-bold">{{ classification.influencer.followers|floatformat:0 }}</span>
-            </div>
-            <div class="text-end">
-                <small class="text-muted d-block">Match Score</small>
-                <span class="fw-bold text-primary">{{ classification.overall_score }}%</span>
-            </div>
-        </div>
-        
-        <div class="d-grid">
-            <a href="{% url 'influencers:influencer_detail' classification.influencer.id %}" class="btn btn-outline-primary btn-sm">
-                View Full Details
-            </a>
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Influencer</th>
+                        <th>Platform</th>
+                        <th>Followers</th>
+                        <th>Match Score</th>
+                        <th>Recommendation</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for classification in page_obj %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ classification.influencer.name }}</div>
+                            <small class="text-muted">@{{ classification.influencer.handle }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ classification.influencer.get_platform_display }}</span>
+                        </td>
+                        <td>{{ classification.influencer.followers|floatformat:0 }}</td>
+                        <td>
+                            <span class="fw-bold text-primary">{{ classification.overall_score }}%</span>
+                        </td>
+                        <td>
+                            {% if classification.recommendation == 'RECOMMEND' %}
+                                <span class="badge bg-success">Recommended</span>
+                            {% elif classification.recommendation == 'MAYBE' %}
+                                <span class="badge bg-warning text-dark">Maybe</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if classification.influencer_id %}
+                                <a href="{% url 'influencers:influencer_detail' classification.influencer_id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+                            {% else %}
+                                <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-search fs-2 d-block mb-2"></i>
+                            No influencers match your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

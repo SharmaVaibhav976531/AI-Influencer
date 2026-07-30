@@ -48,5 +48,10 @@
                 <i class="bi bi-list-check me-2"></i> Results
             </a>
         </li>
+        <li>
+            <a href="{% url 'dashboard:analytics' %}" class="text-white text-decoration-none py-2 px-3 d-block rounded {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                <i class="bi bi-bar-chart me-2"></i> Analytics
+            </a>
+        </li>
     </ul>
 </nav>

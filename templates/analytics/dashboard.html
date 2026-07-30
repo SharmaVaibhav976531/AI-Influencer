@@ -1,0 +1,30 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Analytics | Influencer Discovery Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Analytics Dashboard</h2>
+</div>
+
+{% include 'analytics/partials/filters.html' %}
+{% include 'analytics/partials/kpi_cards.html' %}
+{% include 'analytics/partials/summary_cards.html' %}
+{% include 'analytics/partials/charts.html' %}
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        {% include 'analytics/partials/top_lists.html' %}
+    </div>
+    <div class="col-lg-6">
+        {% include 'analytics/partials/recent_activity.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ charts|json_script:"chart-data" }}
+<script src="{% static 'js/analytics.js' %}"></script>
+{% endblock %}

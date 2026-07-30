@@ -1,0 +1,39 @@
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">Summary Statistics</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Total Platforms</small>
+                <h5 class="fw-bold mb-0">{{ summary.total_platforms }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Total Languages</small>
+                <h5 class="fw-bold mb-0">{{ summary.total_languages }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Unique Keywords</small>
+                <h5 class="fw-bold mb-0">{{ summary.total_keywords }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Govt. Scheme Mentions</small>
+                <h5 class="fw-bold mb-0">{{ summary.total_schemes }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Avg Followers</small>
+                <h5 class="fw-bold mb-0">{{ summary.avg_followers|floatformat:0 }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Max Followers</small>
+                <h5 class="fw-bold mb-0">{{ summary.max_followers|floatformat:0 }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Min Followers</small>
+                <h5 class="fw-bold mb-0">{{ summary.min_followers|floatformat:0 }}</h5>
+            </div>
+            <div class="col-md-3 col-6">
+                <small class="text-muted">Avg Rule-Based Score</small>
+                <h5 class="fw-bold mb-0">{{ summary.avg_rule_score|floatformat:1 }}%</h5>
+            </div>
+        </div>
+    </div>
+</div>

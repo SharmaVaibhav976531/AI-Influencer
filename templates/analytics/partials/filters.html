@@ -1,0 +1,80 @@
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'dashboard:analytics' %}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Date Range</label>
+                    <select name="date_range" class="form-select form-select-sm" id="dateRangeSelect">
+                        <option value="">All Time</option>
+                        <option value="today" {% if filters.date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="7days" {% if filters.date_range == '7days' %}selected{% endif %}>Last 7 Days</option>
+                        <option value="30days" {% if filters.date_range == '30days' %}selected{% endif %}>Last 30 Days</option>
+                        <option value="90days" {% if filters.date_range == '90days' %}selected{% endif %}>Last 90 Days</option>
+                        <option value="this_year" {% if filters.date_range == 'this_year' %}selected{% endif %}>This Year</option>
+                        <option value="custom" {% if filters.date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-3 custom-date-inputs d-none">
+                    <label class="form-label small fw-bold">Start Date</label>
+                    <input type="date" name="custom_start" class="form-control form-control-sm" value="{{ filters.custom_start|default:'' }}">
+                </div>
+                <div class="col-md-3 custom-date-inputs d-none">
+                    <label class="form-label small fw-bold">End Date</label>
+                    <input type="date" name="custom_end" class="form-control form-control-sm" value="{{ filters.custom_end|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Platform</label>
+                    <select name="platform" class="form-select form-select-sm">
+                        <option value="">All Platforms</option>
+                        {% for val, label in platform_choices %}
+                            <option value="{{ val }}" {% if filters.platform == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Language</label>
+                    <input type="text" name="language" class="form-control form-control-sm" placeholder="e.g. English" value="{{ filters.language|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Recommendation</label>
+                    <select name="recommendation" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        {% for val, label in recommendation_choices %}
+                            <option value="{{ val }}" {% if filters.recommendation == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Min Score</label>
+                    <input type="number" name="min_score" class="form-control form-control-sm" min="0" max="100" value="{{ filters.min_score|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Max Score</label>
+                    <input type="number" name="max_score" class="form-control form-control-sm" min="0" max="100" value="{{ filters.max_score|default:'' }}">
+                </div>
+                <div class="col-md-12 d-flex justify-content-end gap-2">
+                    <a href="{% url 'dashboard:analytics' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                    <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('dateRangeSelect');
+    const customInputs = document.querySelectorAll('.custom-date-inputs');
+    
+    function toggleCustomDates() {
+        if (select.value === 'custom') {
+            customInputs.forEach(el => el.classList.remove('d-none'));
+        } else {
+            customInputs.forEach(el => el.classList.add('d-none'));
+        }
+    }
+    
+    select.addEventListener('change', toggleCustomDates);
+    toggleCustomDates();
+});
+</script>

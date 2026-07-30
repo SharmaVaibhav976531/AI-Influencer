@@ -6,66 +6,182 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold">Influencer Results</h2>
-    <button class="btn btn-secondary" disabled title="Coming in Phase 10">
-        <i class="bi bi-download me-2"></i> Export Results
-    </button>
 </div>
 
-<div class="row g-4">
-    <!-- Filters Sidebar -->
-    <div class="col-lg-3">
-        {% include 'results/partials/filters.html' %}
-    </div>
+<!-- Export Form (Wraps the table to capture selected IDs and filters) -->
+<form id="exportForm" method="POST" action="{% url 'influencers:export_results' %}">
+    {% csrf_token %}
+    <input type="hidden" name="format" id="exportFormat" value="csv">
+    <input type="hidden" name="export_type" id="exportType" value="filtered">
+    
+    <!-- Preserve current filters as hidden inputs -->
+    {% for key, value in request.GET.items %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endfor %}
 
-    <!-- Results Area -->
-    <div class="col-lg-9">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body py-2 d-flex justify-content-between align-items-center">
-                <span class="text-muted small">{{ page_obj.paginator.count }} results found</span>
-                <div class="btn-group" role="group">
-                    <input type="radio" class="btn-check" name="viewToggle" id="viewTable" autocomplete="off" checked>
-                    <label class="btn btn-outline-secondary btn-sm" for="viewTable"><i class="bi bi-table"></i> Table</label>
+    <div class="row g-4">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3">
+            {% include 'results/partials/filters.html' %}
+        </div>
+
+        <!-- Results Area -->
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span class="text-muted small">{{ page_obj.paginator.count }} results found</span>
                     
-                    <input type="radio" class="btn-check" name="viewToggle" id="viewCard" autocomplete="off">
-                    <label class="btn btn-outline-secondary btn-sm" for="viewCard"><i class="bi bi-grid"></i> Cards</label>
+                    <div class="d-flex gap-2">
+                        <!-- View Toggle -->
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="viewToggle" id="viewTable" autocomplete="off" checked>
+                            <label class="btn btn-outline-secondary btn-sm" for="viewTable"><i class="bi bi-table"></i> Table</label>
+                            
+                            <input type="radio" class="btn-check" name="viewToggle" id="viewCard" autocomplete="off">
+                            <label class="btn btn-outline-secondary btn-sm" for="viewCard"><i class="bi bi-grid"></i> Cards</label>
+                        </div>
+
+                        <!-- Export Dropdown -->
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-download me-1"></i> Export
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button type="button" class="dropdown-item" onclick="triggerExport('csv', 'filtered')"><i class="bi bi-filetype-csv me-2"></i> Export Filtered (CSV)</button></li>
+                                <li><button type="button" class="dropdown-item" onclick="triggerExport('excel', 'filtered')"><i class="bi bi-file-earmark-excel me-2"></i> Export Filtered (Excel)</button></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><button type="button" class="dropdown-item" onclick="triggerExport('csv', 'selected')" id="btnExportSelectedCsv" disabled><i class="bi bi-filetype-csv me-2"></i> Export Selected (CSV)</button></li>
+                                <li><button type="button" class="dropdown-item" onclick="triggerExport('excel', 'selected')" id="btnExportSelectedExcel" disabled><i class="bi bi-file-earmark-excel me-2"></i> Export Selected (Excel)</button></li>
+                            </ul>
+                        </div>
+                    a</div>
                 </div>
             </div>
-        </div>
 
-        <!-- Table View -->
-        <div id="tableView" class="view-section">
-            {% include 'results/partials/result_table.html' %}
-        </div>
-
-        <!-- Card View (Hidden by default, toggled via JS) -->
-        <div id="cardView" class="view-section d-none">
-            <div class="row g-3">
-                {% for classification in page_obj %}
-                    <div class="col-md-6">
-                        {% include 'results/partials/result_card.html' %}
-                    </div>
-                {% empty %}
-                    <div class="col-12">
-                        <div class="card border-0 shadow-sm text-center p-5">
-                            <i class="bi bi-search fs-1 text-muted mb-3"></i>
-                            <h5>No influencers match your criteria.</h5>
-                            <a href="{% url 'influencers:results_list' %}" class="btn btn-sm btn-outline-primary mt-2">Clear Filters</a>
+            <!-- Table View -->
+            <div id="tableView" class="view-section">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;">
+                                            <input type="checkbox" class="form-check-input" id="selectAll">
+                                        </th>
+                                        <th>Name / Handle</th>
+                                        <th>Platform</th>
+                                        <th>Followers</th>
+                                        <th>Score</th>
+                                        <th>Recommendation</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for classification in page_obj %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" class="form-check-input row-checkbox" name="selected_ids" value="{{ classification.id }}">
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ classification.influencer.name }}</div>
+                                            <small class="text-muted">@{{ classification.influencer.handle }}</small>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border">{{ classification.influencer.get_platform_display }}</span></td>
+                                        <td>{{ classification.influencer.followers|floatformat:0 }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-bold me-2">{{ classification.overall_score }}%</span>
+                                                <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ classification.overall_score }}%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if classification.recommendation == 'RECOMMEND' %}
+                                                <span class="badge bg-success">Highly Relevant</span>
+                                            {% elif classification.recommendation == 'MAYBE' %}
+                                                <span class="badge bg-warning text-dark">Moderately Relevant</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Low Match</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'influencers:influencer_detail' classification.influencer_id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-5">
+                                            No influencers match your current filters.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                {% endfor %}
+                </div>
             </div>
-        </div>
 
-        {% if page_obj.has_other_pages %}
-            {% include 'results/partials/pagination.html' %}
-        {% endif %}
+            <!-- Card View (Hidden by default) -->
+            <div id="cardView" class="view-section d-none">
+                <div class="row g-3">
+                    {% for classification in page_obj %}
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input row-checkbox" type="checkbox" name="selected_ids" value="{{ classification.id }}">
+                                        </div>
+                                        <span class="badge bg-light text-dark border">{{ classification.influencer.get_platform_display }}</span>
+                                    </div>
+                                    <h5 class="fw-bold mb-0">{{ classification.influencer.name }}</h5>
+                                    <small class="text-muted mb-2 d-block">@{{ classification.influencer.handle }}</small>
+                                    <p class="small text-muted mb-3">{{ classification.influencer.bio|truncatewords:15|default:"No bio available." }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <small class="text-muted d-block">Followers</small>
+                                            <span class="fw-bold">{{ classification.influencer.followers|floatformat:0 }}</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">Match Score</small>
+                                            <span class="fw-bold text-primary">{{ classification.overall_score }}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{% url 'influencers:influencer_detail' classification.influencer_id %}" class="btn btn-outline-primary btn-sm">View Full Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm text-center p-5">
+                                <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                                <h5>No influencers match your criteria.</h5>
+                                <a href="{% url 'influencers:results_list' %}" class="btn btn-sm btn-outline-primary mt-2">Clear Filters</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if page_obj.has_other_pages %}
+                {% include 'results/partials/pagination.html' %}
+            {% endif %}
+        </div>
     </div>
-</div>
+</form>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // View Toggle Logic
     const viewTable = document.getElementById('viewTable');
     const viewCard = document.getElementById('viewCard');
     const tableView = document.getElementById('tableView');
@@ -80,9 +196,51 @@ document.addEventListener('DOMContentLoaded', function() {
             cardView.classList.add('d-none');
         }
     }
-
     viewTable.addEventListener('change', updateView);
     viewCard.addEventListener('change', updateView);
+
+    // Select All Logic
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const btnExportSelectedCsv = document.getElementById('btnExportSelectedCsv');
+    const btnExportSelectedExcel = document.getElementById('btnExportSelectedExcel');
+
+    function updateSelectedButtons() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        const isDisabled = checkedCount === 0;
+        btnExportSelectedCsv.disabled = isDisabled;
+        btnExportSelectedExcel.disabled = isDisabled;
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(cb => cb.checked = this.checked);
+            updateSelectedButtons();
+        });
+    }
+
+    rowCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = Array.from(rowCheckboxes).every(c => c.checked);
+            }
+            updateSelectedButtons();
+        });
+    });
+
+    // Export Trigger Logic
+    window.triggerExport = function(format, type) {
+        if (type === 'selected') {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                alert("Please select at least one record to export.");
+                return;
+            }
+        }
+        document.getElementById('exportFormat').value = format;
+        document.getElementById('exportType').value = type;
+        document.getElementById('exportForm').submit();
+    };
 });
 </script>
 {% endblock %}
