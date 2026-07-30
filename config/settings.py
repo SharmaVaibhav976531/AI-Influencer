@@ -129,3 +129,12 @@ SESSION_COOKIE_SECURE = False   # Set to True in production with HTTPS
 # Prints emails to the console instead of sending them.
 # For production, configure SMTP settings using environment variables.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# ==========================================
+# OpenRouter AI Configuration
+# ==========================================
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
+OPENROUTER_MODEL_NAME = os.getenv('OPENROUTER_MODEL_NAME', 'nvidia/nemotron-3-ultra-550b-a55b:free')
+OPENROUTER_BASE_URL = os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
+OPENROUTER_TIMEOUT = int(os.getenv('OPENROUTER_TIMEOUT', 30))
+OPENROUTER_MAX_RETRIES = int(os.getenv('OPENROUTER_MAX_RETRIES', 3))

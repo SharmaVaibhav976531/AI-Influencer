@@ -75,8 +75,16 @@ class Classification(TimeStampedModel):
         choices=Recommendation.choices, 
         default=Recommendation.MAYBE
     )
+
+    # NEW AI-Specific Fields
+    ai_model_name = models.CharField(max_length=255, blank=True, null=True)
+    processing_time_seconds = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    summary = models.TextField(blank=True, null=True)
+
     ai_response = models.JSONField(default=dict, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+
+    
 
     class Meta:
         ordering = ['-created_at']

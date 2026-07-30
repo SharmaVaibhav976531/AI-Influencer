@@ -1,9 +1,15 @@
+import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Avg
-from .models import Influencer
-from .services import batch_process_nlp
+
+from apps.influencers.models import Influencer
+from apps.influencers.services import openrouter_service
+from apps.classification.models import Classification, SearchCriteria
+from .services import batch_process_nlp, openrouter_service
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def nlp_processing_view(request):
@@ -28,3 +34,75 @@ def nlp_processing_view(request):
         'avg_score': round(avg_score, 2) if avg_score else 0,
     }
     return render(request, 'influencers/nlp_dashboard.html', context)
+
+
+@login_required
+def ai_classification_view(request):
+    if request.method == "POST":
+        messages.info(request, "Starting AI Classification. This may take a few minutes...")
+        
+        # Fetch influencers with NLP data but no COMPLETED classification
+        influencers = Influencer.objects.filter(
+            upload__user=request.user,
+            nlp_processed_at__isnull=False
+        ).exclude(
+            classifications__status='COMPLETED'
+        ).distinct()
+        
+        # Use the user's first active search criteria, or None for default
+        criteria = SearchCriteria.objects.filter(user=request.user, status='ACTIVE').first()
+        
+        processed_count = 0
+        failed_count = 0
+        
+        for inf in influencers.iterator():
+            try:
+                result = openrouter_service.classify_influencer(inf, criteria)
+                
+                # Map AI recommendation string to Django Choice
+                ai_rec = result.get('recommendation', 'Maybe').upper().replace(' ', '_')
+                if ai_rec not in ['RECOMMEND', 'MAYBE', 'REJECT']:
+                    ai_rec = 'MAYBE'
+                
+                Classification.objects.create(
+                    influencer=inf,
+                    search_criteria=criteria,
+                    overall_score=result.get('overall_score', 0),
+                    confidence_score=result.get('confidence_score', 0),
+                    language_match=(result.get('language') == inf.language_detected),
+                    orientation_match=(result.get('orientation') == 'Supportive'),
+                    niche_match=True, 
+                    keyword_match=len(result.get('matched_keywords', [])) > 0,
+                    matched_keywords=result.get('matched_keywords', []),
+                    reason=result.get('reason', ''),
+                    recommendation=ai_rec,
+                    ai_response=result,
+                    status='COMPLETED',
+                    ai_model_name=result.get('ai_model_name', ''),
+                    processing_time_seconds=result.get('processing_time_seconds', 0),
+                    summary=result.get('summary', '')
+                )
+                processed_count += 1
+            except Exception as e:
+                logger.error(f"Failed to classify {inf.handle}: {e}")
+                Classification.objects.create(
+                    influencer=inf,
+                    search_criteria=criteria,
+                    status='FAILED',
+                    reason=str(e)
+                )
+                failed_count += 1
+                
+        messages.success(request, f"AI Classification completed. Processed: {processed_count}, Failed: {failed_count}.")
+        return redirect('influencers:ai_classification')
+        
+    total_nlp_processed = Influencer.objects.filter(upload__user=request.user, nlp_processed_at__isnull=False).count()
+    total_classified = Classification.objects.filter(influencer__upload__user=request.user, status='COMPLETED').count()
+    pending_count = total_nlp_processed - total_classified
+    
+    context = {
+        'total_nlp_processed': total_nlp_processed,
+        'total_classified': total_classified,
+        'pending_count': pending_count,
+    }
+    return render(request, 'influencers/ai_classification.html', context)

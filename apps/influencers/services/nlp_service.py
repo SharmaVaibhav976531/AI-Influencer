@@ -1,13 +1,12 @@
 import logging
 from django.utils import timezone
-from .models import Influencer
-from .utils import clean_text_for_nlp, detect_language, extract_nlp_features, calculate_rule_based_score
+from apps.influencers.models import Influencer
+from apps.influencers.utils import clean_text_for_nlp, detect_language, extract_nlp_features, calculate_rule_based_score
 
 logger = logging.getLogger(__name__)
 
 def process_influencer_nlp(influencer: Influencer) -> None:
     try:
-        # 1. Merge text sources
         raw_text = " ".join(filter(None, [influencer.bio, influencer.description]))
         
         if not raw_text or len(raw_text.strip()) < 5:
@@ -16,26 +15,19 @@ def process_influencer_nlp(influencer: Influencer) -> None:
             influencer.save(update_fields=['language_detected', 'nlp_processed_at'])
             return
 
-        # 2. Clean text
         clean_text = clean_text_for_nlp(raw_text)
-        
-        # 3. Language Detection
         lang_result = detect_language(clean_text)
-        
-        # 4. Extract Features (Keywords & Entities)
         nlp_features = extract_nlp_features(clean_text)
         
-        # 5. Rule-Based Scoring
         score_result = calculate_rule_based_score(
             nlp_features["keywords"], 
             nlp_features["entities"], 
             lang_result["code"]
         )
         
-        # 6. Update Influencer
         influencer.language_detected = lang_result["name"]
         influencer.language_confidence = lang_result["confidence"]
-        influencer.extracted_keywords = nlp_features["keywords"][:50] # Limit to top 50
+        influencer.extracted_keywords = nlp_features["keywords"][:50]
         influencer.extracted_entities = nlp_features["entities"]
         influencer.rule_based_score = score_result["overall_score"]
         influencer.nlp_matched_groups = score_result["matched_groups"]
