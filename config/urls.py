@@ -2,10 +2,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('apps.dashboard.urls')),
+    
+    # Redirect root URL to dashboard (which will redirect to login if unauthenticated)
+    path('', RedirectView.as_view(url='/dashboard/', permanent=False)),
+    
+    # Authentication URLs (/login/, /logout/)
+    path('', include('apps.authentication.urls')),
+    
+    # Dashboard URLs (/dashboard/)
+    path('dashboard/', include('apps.dashboard.urls')),
 ]
 
 # Serve media files in development

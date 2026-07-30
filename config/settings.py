@@ -105,5 +105,27 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Custom user model (optional - uncomment if needed)
-# AUTH_USER_MODEL = 'authentication.User'
+# ==========================================
+# Custom User Model Configuration
+# ==========================================
+AUTH_USER_MODEL = 'authentication.User'
+
+# ==========================================
+# Authentication & Session Configuration
+# ==========================================
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard:home'
+LOGOUT_REDIRECT_URL = 'login'
+
+# Session Security
+SESSION_COOKIE_AGE = 1209600  # 2 weeks (in seconds)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Overridden by 'Remember Me' logic in views
+SESSION_COOKIE_HTTPONLY = True  # Prevents XSS access to session cookie
+SESSION_COOKIE_SECURE = False   # Set to True in production with HTTPS
+
+# ==========================================
+# Email Configuration (Development)
+# ==========================================
+# Prints emails to the console instead of sending them.
+# For production, configure SMTP settings using environment variables.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
