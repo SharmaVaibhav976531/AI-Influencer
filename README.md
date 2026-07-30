@@ -18,32 +18,32 @@ An enterprise-grade, AI-powered **Influencer Discovery, NLP Processing, and Anal
 1. [Project Title](#-ai-influencer-discovery--analytics-dashboard)
 2. [Project Overview](#-2-project-overview)
 3. [Features](#-3-features)
-4. [Screenshots](#-4-screenshots)
-5. [Technology Stack](#-5-technology-stack)
-6. [Project Architecture](#-6-project-architecture)
-7. [Project Structure](#-7-project-structure)
-8. [Installation Guide](#-8-installation-guide)
-9. [Environment Variables](#-9-environment-variables)
-10. [Usage Guide](#-10-usage-guide)
-11. [Workflow](#-11-workflow)
-12. [Database Design](#-12-database-design)
-13. [AI Classification](#-13-ai-classification)
-14. [NLP Engine](#-14-nlp-engine)
-15. [Analytics](#-15-analytics)
-16. [Export System](#-16-export-system)
-17. [Discovery System](#-17-discovery-system)
-18. [Error Handling & Logging](#-18-error-handling--logging)
-19. [Testing & QA Datasets](#-19-testing--qa-datasets)
-20. [Performance & Optimizations](#-20-performance--optimizations)
-21. [Security & Session Isolation](#-21-security--session-isolation)
-22. [API Overview](#-22-api-overview)
-23. [Known Limitations](#-23-known-limitations)
-24. [Future Improvements](#-24-future-improvements)
-25. [Contributing](#-25-contributing)
-26. [License](#-26-license)
-27. [Author](#-27-author)
-28. [Acknowledgements](#-28-acknowledgements)
-29. [Project Status](#-29-project-status)
+4. [Technology Stack](#-4-technology-stack)
+5. [Project Architecture](#-5-project-architecture)
+6. [Project Structure](#-6-project-structure)
+7. [Installation Guide](#-7-installation-guide)
+8. [Environment Variables](#-8-environment-variables)
+9. [Usage Guide](#-9-usage-guide)
+10. [Workflow](#-10-workflow)
+11. [Database Design](#-11-database-design)
+12. [AI Classification](#-12-ai-classification)
+13. [NLP Engine](#-13-nlp-engine)
+14. [Analytics](#-14-analytics)
+15. [Export System](#-15-export-system)
+16. [Discovery System](#-16-discovery-system)
+17. [Error Handling & Logging](#-17-error-handling--logging)
+18. [Testing & QA Datasets](#-18-testing--qa-datasets)
+19. [Performance & Optimizations](#-19-performance--optimizations)
+20. [Security & Session Isolation](#-20-security--session-isolation)
+21. [API Overview](#-21-api-overview)
+22. [Known Limitations](#-22-known-limitations)
+23. [Future Improvements](#-23-future-improvements)
+24. [Contributing](#-24-contributing)
+25. [License](#-25-license)
+26. [Author](#-26-author)
+27. [Acknowledgements](#-27-acknowledgements)
+28. [Project Status](#-28-project-status)
+
 
 ---
 
@@ -126,27 +126,8 @@ A communications agency needs to evaluate 500 regional tech creators for a natio
 
 ---
 
-## 🖼️ 4. Screenshots
+## 🛠️ 4. Technology Stack
 
-*(Replace placeholders below with actual screenshots of your running repository UI)*
-
-| Module | Preview Placeholder |
-|---|---|
-| **Dashboard Home** | ![Dashboard Home](https://via.placeholder.com/800x450.png?text=Dashboard+Home+UI) |
-| **Upload Files** | ![Upload Files](https://via.placeholder.com/800x450.png?text=Upload+Portal+UI) |
-| **10-Row Data Preview** | ![Data Preview](https://via.placeholder.com/800x450.png?text=JSON+Data+Preview+Modal) |
-| **AI Classification Progress** | ![AI Classification](https://via.placeholder.com/800x450.png?text=Real-Time+SSE+Progress+Dashboard) |
-| **Results List View** | ![Results List](https://via.placeholder.com/800x450.png?text=Classification+Results+Table) |
-| **Influencer Detail View** | ![Detail Page](https://via.placeholder.com/800x450.png?text=Influencer+Detail+View) |
-| **Analytics Dashboard** | ![Analytics](https://via.placeholder.com/800x450.png?text=Chart.js+Analytics+Dashboard) |
-| **Real-Time Discovery** | ![Discovery](https://via.placeholder.com/800x450.png?text=Discovery+Portal) |
-| **Export Data Portal** | ![Export Portal](https://via.placeholder.com/800x450.png?text=Excel+and+CSV+Export) |
-| **404 Not Found Page** | ![404 Error](https://via.placeholder.com/800x450.png?text=Custom+404+Error+Page) |
-| **500 Server Error Page** | ![500 Error](https://via.placeholder.com/800x450.png?text=Custom+500+Error+Page) |
-
----
-
-## 🛠️ 5. Technology Stack
 
 ### Backend
 - **Framework**: Django `6.0.7`
@@ -178,7 +159,7 @@ A communications agency needs to evaluate 500 regional tech creators for a natio
 
 ---
 
-## 🏗️ 6. Project Architecture
+## 🏗️ 5. Project Architecture
 
 The architecture follows a modular, decoupled ETL and AI classification pipeline:
 
@@ -214,7 +195,7 @@ flowchart TD
 
 ---
 
-## 📂 7. Project Structure
+## 📂 6. Project Structure
 
 ```text
 AI_Influence_Dashboard/
@@ -284,7 +265,7 @@ AI_Influence_Dashboard/
 
 ---
 
-## ⚡ 8. Installation Guide
+## ⚡ 7. Installation Guide
 
 Follow these steps to set up the project locally on Linux, macOS, or Windows:
 
@@ -345,7 +326,7 @@ Visit `http://127.0.0.1:8000/` in your browser.
 
 ---
 
-## 🔑 9. Environment Variables
+## 🔑 8. Environment Variables
 
 Create a `.env` file in the root directory. Below is the complete specification:
 
@@ -365,7 +346,7 @@ Create a `.env` file in the root directory. Below is the complete specification:
 
 ---
 
-## 📖 10. Usage Guide
+## 📖 9. Usage Guide
 
 ### Step 1: Login to Application
 Navigate to `/login/` and sign in using your registered credentials.
@@ -398,7 +379,7 @@ Click **Export Data** in the sidebar to generate a formatted Excel spreadsheet (
 
 ---
 
-## 🔄 11. Workflow
+## 🔄 10. Workflow
 
 ```mermaid
 sequenceDiagram
@@ -434,10 +415,10 @@ sequenceDiagram
 
 ---
 
-## 🗄️ 12. Database Design
+## 🗄️ 11. Database Design
 
 ```mermaid
-erdiagram
+erDiagram
     USER ||--o{ UPLOAD : uploads
     USER ||--o{ SEARCH_CRITERIA : creates
     UPLOAD ||--o{ INFLUENCER : contains
@@ -470,10 +451,10 @@ erdiagram
         string platform
         string name
         int followers
-        text bio
-        text description
+        string bio
+        string description
         string language_detected
-        json keywords_extracted
+        string keywords_extracted
         float rule_based_score
         datetime nlp_processed_at
     }
@@ -496,14 +477,15 @@ erdiagram
         string recommendation
         string status
         float processing_time_seconds
-        json ai_response
+        string ai_response
         datetime created_at
     }
 ```
 
+
 ---
 
-## 🤖 13. AI Classification
+## 🤖 12. AI Classification
 
 The AI classification module connects to OpenRouter via the official OpenAI Python SDK:
 
@@ -514,7 +496,7 @@ The AI classification module connects to OpenRouter via the official OpenAI Pyth
 
 ---
 
-## 🔬 14. NLP Engine
+## 🔬 13. NLP Engine
 
 The NLP engine pipeline processes unclassified text through three stages:
 
@@ -528,7 +510,7 @@ The NLP engine pipeline processes unclassified text through three stages:
 
 ---
 
-## 📊 15. Analytics
+## 📊 14. Analytics
 
 The Analytics module (`apps/analytics/` & `templates/analytics/`) renders dynamic Chart.js dashboards:
 
@@ -539,7 +521,7 @@ The Analytics module (`apps/analytics/` & `templates/analytics/`) renders dynami
 
 ---
 
-## 📤 16. Export System
+## 📤 15. Export System
 
 The export module (`apps/influencers/services/export_service.py`) supports dual formats:
 
@@ -548,7 +530,7 @@ The export module (`apps/influencers/services/export_service.py`) supports dual 
 
 ---
 
-## 🌐 17. Discovery System
+## 🌐 16. Discovery System
 
 The Discovery module (`apps/influencers/services/discovery_service.py`) implements a pluggable provider design:
 
@@ -558,14 +540,14 @@ The Discovery module (`apps/influencers/services/discovery_service.py`) implemen
 
 ---
 
-## 🛡️ 18. Error Handling & Logging
+## 🛡️ 17. Error Handling & Logging
 
 - **Custom HTTP Error Pages**: Production-ready custom templates for `404 Not Found` (`templates/404.html`) and `500 Internal Server Error` (`templates/500.html`).
 - **Structured Django Logging**: Configured in `config/settings.py` to output formatted, color-coded console logs for ETL ingestion, NLP processing, OpenRouter retries, and SSE progress updates.
 
 ---
 
-## 🧪 19. Testing & QA Datasets
+## 🧪 18. Testing & QA Datasets
 
 The repository includes a comprehensive unit test suite and synthetic QA dataset generators:
 
@@ -583,7 +565,7 @@ python manage.py test apps.uploads.tests apps.authentication.tests apps.classifi
 
 ---
 
-## 🚀 20. Performance & Optimizations
+## 🚀 19. Performance & Optimizations
 
 - **Bulk Database Operations**: `Influencer` creation uses `Influencer.objects.bulk_create()` to reduce database round-trips during ETL file uploads.
 - **Database Indexing**: Explicit database indexes on `handle`, `platform`, `language_detected`, `status`, and `nlp_processed_at`.
@@ -591,7 +573,7 @@ python manage.py test apps.uploads.tests apps.authentication.tests apps.classifi
 
 ---
 
-## 🔒 21. Security & Session Isolation
+## 🔒 20. Security & Session Isolation
 
 - **Session Cookie Isolation**: `IsolatedSessionMiddleware` segregates Django Admin sessions (`admin_sessionid`) from regular application user sessions (`sessionid`).
 - **CSRF Session Storage**: `CSRF_USE_SESSIONS = True` prevents token mismatch errors across tabs and isolated admin environments.
@@ -599,7 +581,7 @@ python manage.py test apps.uploads.tests apps.authentication.tests apps.classifi
 
 ---
 
-## 🔌 22. API Overview
+## 🔌 21. API Overview
 
 Below is the routing table for all implemented application endpoints:
 
@@ -623,7 +605,7 @@ Below is the routing table for all implemented application endpoints:
 
 ---
 
-## 📌 23. Known Limitations
+## 📌 22. Known Limitations
 
 1. **Synchronous Ingestion Execution**: File processing and NLP jobs run synchronously in the web process, which can delay HTTP responses for very large files (>50,000 rows).
 2. **OpenRouter Free Tier Rate Limits**: Third-party API rate limits on free models may trigger exponential backoff pauses during large AI classification runs.
@@ -631,7 +613,7 @@ Below is the routing table for all implemented application endpoints:
 
 ---
 
-## 🔮 24. Future Improvements
+## 🔮 23. Future Improvements
 
 - [ ] **Asynchronous Task Queue**: Integrate Celery and Redis to move ETL parsing, spaCy NLP, and OpenRouter classification jobs to background workers.
 - [ ] **Live Social API Connectors**: Add official YouTube Data API v3 and Instagram Graph API provider connectors.
@@ -640,7 +622,7 @@ Below is the routing table for all implemented application endpoints:
 
 ---
 
-## 🤝 25. Contributing
+## 🤝 24. Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -652,13 +634,13 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 📜 26. License
+## 📜 25. License
 
 This project is open-source software licensed under the [MIT License](LICENSE).
 
 ---
 
-## 👨‍💻 27. Author
+## 👨‍💻 26. Author
 
 **Vaibhav Sharma**
 - GitHub: [@SharmaVaibhav976531](https://github.com/SharmaVaibhav976531)
@@ -666,7 +648,7 @@ This project is open-source software licensed under the [MIT License](LICENSE).
 
 ---
 
-## 🙏 28. Acknowledgements
+## 🙏 27. Acknowledgements
 
 - [Django Software Foundation](https://www.djangoproject.com/)
 - [spaCy Natural Language Processing](https://spacy.io/)
@@ -677,7 +659,7 @@ This project is open-source software licensed under the [MIT License](LICENSE).
 
 ---
 
-## 🚦 29. Project Status
+## 🚦 28. Project Status
 
 | Metric | Status |
 |---|---|
