@@ -18,9 +18,10 @@ urlpatterns = [
     path('500/', custom_500_view, name='custom_500_preview'),
 ]
 
-# Serve media files and static files
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# Serve media files and static files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
 
 # Custom Error Handlers
 handler404 = 'config.views.custom_404_view'
